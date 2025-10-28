@@ -2,7 +2,7 @@
 import React from 'react';
 import type { ProcessingState } from '../types';
 import { ProcessingStep } from '../types';
-import { SparklesIcon, TextIcon, PersonIcon } from './Icons';
+import { SparklesIcon, TextIcon, PersonIcon, BrushIcon } from './Icons';
 
 interface ProcessingViewProps {
   state: ProcessingState;
@@ -23,6 +23,11 @@ const statusMessages: { [key in Exclude<ProcessingStep, 'IDLE' | 'DONE' | 'ERROR
     icon: <PersonIcon className="w-8 h-8 text-indigo-500" />,
     text: 'Gerando imagem do modelo...',
     subtext: 'A IA está vestindo a modelo com a sua peça. Isso pode demorar um pouco.'
+  },
+  [ProcessingStep.EDITING]: {
+    icon: <BrushIcon className="w-8 h-8 text-indigo-500" />,
+    text: 'Aplicando edições...',
+    subtext: 'A IA está corrigindo a imagem com base na sua solicitação. Um momento.'
   },
 };
 

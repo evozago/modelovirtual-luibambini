@@ -1,10 +1,10 @@
-
 import React from 'react';
-import { GenerationOptions, Gender, Age, Theme, Background } from '../types';
+import { GenerationOptions, Gender, Age, Theme, Background, PieceCount } from '../types';
 
 interface GenerationOptionsProps {
-  options: GenerationOptions;
-  setOptions: React.Dispatch<React.SetStateAction<GenerationOptions>>;
+  options: Omit<GenerationOptions, 'pieceCount'>;
+  setOptions: React.Dispatch<React.SetStateAction<Omit<GenerationOptions, 'pieceCount'>>>;
+  isSetCreationMode?: boolean;
 }
 
 const SelectField: React.FC<{
@@ -25,14 +25,21 @@ const SelectField: React.FC<{
   </div>
 );
 
-export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ options, setOptions }) => {
-  const handleChange = (field: keyof GenerationOptions) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setOptions(prev => ({ ...prev, [field]: e.target.value }));
+export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ options, setOptions, isSetCreationMode = false }) => {
+  const handleChange = (field: keyof Omit<GenerationOptions, 'pieceCount'>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setOptions(prev => ({ ...prev, [field]: e.target.value as any }));
   };
 
   return (
     <div className="w-full mb-6 space-y-4">
        <h2 className="text-xl font-semibold text-gray-700 mb-4">Personalize a Imagem Gerada</h2>
+       
+        {!isSetCreationMode && (
+            <SelectField label="Tipo de Produto" value={(options as GenerationOptions).pieceCount} onChange={() => {}}>
+                {Object.values(PieceCount).map(p => <option key={p} value={p}>{p}</option>)}
+            </SelectField>
+        )}
+
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SelectField label="Gênero" value={options.gender} onChange={handleChange('gender')}>
               {Object.values(Gender).map(g => <option key={g} value={g}>{g}</option>)}

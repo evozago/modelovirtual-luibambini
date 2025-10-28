@@ -4,6 +4,7 @@ export enum ProcessingStep {
   CLEANING = 'CLEANING',
   GENERATING_TEXT = 'GENERATING_TEXT',
   GENERATE_MODEL_IMAGE = 'GENERATE_MODEL_IMAGE',
+  EDITING = 'EDITING',
   DONE = 'DONE',
   ERROR = 'ERROR',
 }
@@ -46,7 +47,13 @@ export enum Background {
   PARK = 'PARQUE DE DIVERSÃO',
 }
 
+export enum PieceCount {
+  SINGLE = 'PEÇA ÚNICA',
+  SET = 'CONJUNTO',
+}
+
 export interface GenerationOptions {
+  pieceCount: PieceCount;
   gender: Gender;
   age: Age;
   theme: Theme;

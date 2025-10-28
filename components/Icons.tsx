@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const LogoIcon: React.FC = () => (
@@ -60,4 +61,23 @@ export const DownloadIcon: React.FC<{ className?: string }> = ({ className }) =>
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
     </svg>
-  );
+);
+
+export const BrushIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.75a2.25 2.25 0 01-2.25-2.25v-6.5a2.25 2.25 0 012.25-2.25h14.5a2.25 2.25 0 012.25 2.25v6.5a2.25 2.25 0 01-2.25 2.25H16.5m-9-3.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v.75a2.25 2.25 0 002.25 2.25h13.5a2.25 2.25 0 002.25-2.25v-.75" />
+    </svg>
+);
+
+export const XIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+export const InfoIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+    </svg>
+);
