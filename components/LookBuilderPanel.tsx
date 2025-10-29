@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClothingImagesState } from '../types';
 import { ImageUploader } from './ImageUploader';
@@ -12,21 +11,40 @@ interface LookBuilderPanelProps {
   onRemoveImage: (part: keyof ClothingImagesState) => void;
 }
 
-const ImagePreview: React.FC<{ src: string; onRemove: () => void; label: string }> = ({ src, onRemove, label }) => (
-    <div className="relative group w-full">
-        <label className="block text-sm font-medium text-gray-500 mb-1">{label}</label>
-        <div className="relative aspect-square w-full">
-            <img src={src} alt={`Preview of ${label}`} className="w-full h-full object-cover rounded-lg border border-gray-200" />
-            <button
-                onClick={onRemove}
-                className="absolute top-1 right-1 p-1 bg-black bg-opacity-50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                aria-label={`Remover ${label}`}
-            >
-                <XIcon className="w-4 h-4" />
-            </button>
-        </div>
+const ImagePreview: React.FC<{ src: string; onRemove: () => void; }> = ({ src, onRemove }) => (
+    <div className="relative group w-full aspect-square">
+        <img src={src} alt="Preview of clothing" className="w-full h-full object-cover rounded-lg border border-gray-200" />
+        <button
+            onClick={onRemove}
+            className="absolute top-1 right-1 p-1 bg-black bg-opacity-50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+            aria-label={`Remover imagem`}
+        >
+            <XIcon className="w-4 h-4" />
+        </button>
     </div>
 );
+
+
+const UploadSlot: React.FC<{
+    part: keyof ClothingImagesState;
+    label: string;
+    image: string | null;
+    onUpload: (part: keyof ClothingImagesState, file: File) => void;
+    onRemove: (part: keyof ClothingImagesState) => void;
+}> = ({ part, label, image, onUpload, onRemove }) => {
+    return (
+        <div className="flex flex-col gap-2 h-full">
+            <p className="text-center text-sm font-medium text-gray-600">{label}</p>
+            <div className="flex-grow">
+                {image ? (
+                    <ImagePreview src={image} onRemove={() => onRemove(part)} />
+                ) : (
+                    <ImageUploader onImageUpload={(file) => onUpload(part, file)} className="h-full" />
+                )}
+            </div>
+        </div>
+    );
+};
 
 
 export const LookBuilderPanel: React.FC<LookBuilderPanelProps> = ({
@@ -47,20 +65,6 @@ export const LookBuilderPanel: React.FC<LookBuilderPanelProps> = ({
       {children}
     </button>
   );
-  
-  const hasAnyImage = Object.values(clothingImages).some(img => img !== null);
-
-  if (hasAnyImage) {
-      return (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 flex flex-col h-full space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-3">Seu Look Atual</h3>
-              {clothingImages.combined && <ImagePreview src={clothingImages.combined} onRemove={() => onRemoveImage('combined')} label="Look Completo" />}
-              {clothingImages.top && <ImagePreview src={clothingImages.top} onRemove={() => onRemoveImage('top')} label="Parte Superior" />}
-              {clothingImages.bottom && <ImagePreview src={clothingImages.bottom} onRemove={() => onRemoveImage('bottom')} label="Parte Inferior" />}
-              {clothingImages.shoes && <ImagePreview src={clothingImages.shoes} onRemove={() => onRemoveImage('shoes')} label="Calçado" />}
-          </div>
-      )
-  }
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 flex flex-col h-full">
@@ -70,30 +74,47 @@ export const LookBuilderPanel: React.FC<LookBuilderPanelProps> = ({
       </div>
 
       {uploadMode === 'separate' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
-          <div className="flex flex-col gap-4">
-            <ImageUploader onImageUpload={(file) => onImageUpload('top', file)} className="h-full" />
-            <p className="text-center text-sm font-medium text-gray-600">Parte Superior</p>
-          </div>
-          <div className="flex flex-col gap-4">
-            <ImageUploader onImageUpload={(file) => onImageUpload('bottom', file)} className="h-full" />
-            <p className="text-center text-sm font-medium text-gray-600">Parte Inferior</p>
-          </div>
-          <div className="md:col-span-2 flex flex-col gap-4">
-            <ImageUploader onImageUpload={(file) => onImageUpload('shoes', file)} className="h-full" />
-            <p className="text-center text-sm font-medium text-gray-600">Calçado (Opcional)</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
+          <UploadSlot 
+            part="top"
+            label="Parte Superior"
+            image={clothingImages.top}
+            onUpload={onImageUpload}
+            onRemove={onRemoveImage}
+          />
+          <UploadSlot 
+            part="bottom"
+            label="Parte Inferior"
+            image={clothingImages.bottom}
+            onUpload={onImageUpload}
+            onRemove={onRemoveImage}
+          />
+          <div className="md:col-span-2">
+            <UploadSlot 
+                part="shoes"
+                label="Calçado (Opcional)"
+                image={clothingImages.shoes}
+                onUpload={onImageUpload}
+                onRemove={onRemoveImage}
+            />
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 flex-grow">
-            <div className="flex-grow">
-                <ImageUploader onImageUpload={(file) => onImageUpload('combined', file)} className="h-full" />
-                <p className="text-center text-sm font-medium text-gray-600 mt-4">Look Completo</p>
-            </div>
-            <div className="flex-grow">
-                <ImageUploader onImageUpload={(file) => onImageUpload('shoes', file)} className="h-full" />
-                <p className="text-center text-sm font-medium text-gray-600 mt-4">Calçado (Opcional)</p>
-            </div>
+        <div className="grid grid-cols-1 gap-6 flex-grow">
+            <UploadSlot 
+                part="combined"
+                label="Look Completo"
+                image={clothingImages.combined}
+                onUpload={onImageUpload}
+                onRemove={onRemoveImage}
+            />
+            <UploadSlot 
+                part="shoes"
+                label="Calçado (Opcional)"
+                image={clothingImages.shoes}
+                onUpload={onImageUpload}
+                onRemove={onRemoveImage}
+            />
         </div>
       )}
     </div>
