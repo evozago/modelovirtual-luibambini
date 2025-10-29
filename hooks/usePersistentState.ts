@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 function getStorageValue<T>(key: string, defaultValue: T): T {
@@ -23,25 +22,19 @@ export const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.
 
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(value));
-    // When we set an item, we dispatch a custom event that our external script can listen to if needed.
-    // However, the primary mechanism is the external script updating localStorage and this hook reacting.
   }, [key, value]);
 
-  // This effect listens for changes made in other tabs or by our external script
   const handleStorageChange = useCallback((event: StorageEvent | Event) => {
-    // The 'storage' event is only fired for changes in other documents (tabs/windows)
-    // For same-page changes (our external script), we dispatch a custom event or check the key directly
     let eventKey: string | null = null;
     if ('key' in event) { // For real StorageEvent
         eventKey = event.key;
     }
     
-    // The custom event we fire in index.tsx doesn't have a key, so we'll just re-sync
-    if (event.type === 'storage' && eventKey === key) {
+    // This handles both the native storage event (for other tabs) and our custom
+    // dispatched event from index.tsx for same-page updates.
+    if ((event.type === 'storage' && eventKey === key) || (event.type === 'storage' && eventKey === null)) {
+        console.log(`[LookBuilder React] Storage change detected for key "${key}". Updating component state.`);
         setValue(getStorageValue(key, defaultValue));
-    } else if (event.type === 'storage' && eventKey === null) {
-        // This handles our custom dispatched 'storage' event from index.tsx
-         setValue(getStorageValue(key, defaultValue));
     }
   }, [key, defaultValue]);
 

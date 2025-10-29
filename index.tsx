@@ -4,15 +4,17 @@ import App from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+  // This is expected on the Shopify store, where there's no #root element.
+  // The script below will run regardless.
+} else {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 
 // --- Script to handle Shopify product page interaction ---
 const LOOK_BUILDER_STORAGE_KEY = 'lui-bambini-look-builder';
@@ -50,6 +52,7 @@ function getLookFromStorage(): Look {
 }
 
 function saveLookToStorage(look: Look) {
+  console.log('[LookBuilder] Saving new look to storage:', look);
   localStorage.setItem(LOOK_BUILDER_STORAGE_KEY, JSON.stringify(look));
   // Dispatch a storage event so usePersistentState hook in React updates
   window.dispatchEvent(new Event('storage'));
@@ -57,6 +60,7 @@ function saveLookToStorage(look: Look) {
 
 function updateButtonsState() {
   const look = getLookFromStorage();
+  console.log('[LookBuilder] Updating button states. Current look:', look);
   const buttons = document.querySelectorAll('.add-to-look-btn');
   
   const selectedTypes: ClothingPiece[] = [];
@@ -107,13 +111,19 @@ function handleDelegatedButtonClick(event: MouseEvent) {
     return;
   }
   
+  console.log('[LookBuilder] Click detected on:', button);
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
 
   const { productType, productImage } = button.dataset;
+  console.log('[LookBuilder] Button data:', { productType, productImage });
 
-  if (!productType || !productImage) return;
+
+  if (!productType || !productImage) {
+    console.warn('[LookBuilder] Button is missing data-product-type or data-product-image.');
+    return;
+  }
 
   const type = productType as ClothingPiece;
   const currentLook = getLookFromStorage();
@@ -138,6 +148,7 @@ function handleDelegatedButtonClick(event: MouseEvent) {
 // --- Main script execution ---
 
 function initializeLookBuilder() {
+    console.log('[LookBuilder] Initializing on Shopify store page.');
     window.addEventListener('click', handleDelegatedButtonClick, true);
     
     window.addEventListener('storage', debouncedUpdateButtonsState);
@@ -154,6 +165,7 @@ function initializeLookBuilder() {
                 );
 
                 if (hasRelevantNode) {
+                    console.log('[LookBuilder] Detected relevant DOM change, updating buttons.');
                     debouncedUpdateButtonsState();
                     break; 
                 }
@@ -167,4 +179,9 @@ function initializeLookBuilder() {
     updateButtonsState();
 }
 
-initializeLookBuilder();
+// Ensure the script only runs on the main window, not inside iframes like the theme editor.
+if (window.self === window.top) {
+    initializeLookBuilder();
+} else {
+    console.log('[LookBuilder] Script is in an iframe (e.g., Shopify Theme Editor), not initializing main listeners.');
+}
