@@ -1,4 +1,4 @@
-// services/geminiService.ts - ATUALIZADO
+// services/geminiService.ts - VERSÃO FINAL CORRIGIDA
 import type { GenerationOptions, PieceCount } from '../types';
 
 // O endereço do nosso "escritório seguro" que agora mora junto com o site.
@@ -24,8 +24,10 @@ async function callApi<T>(action: string, payload: object): Promise<T> {
 }
 
 export const processImage = async (imageBase64: string, mimeType: string, pieceCount: PieceCount): Promise<string> => {
+  // A API espera base64 puro, sem o prefixo
+  const pureBase64 = imageBase64.split(',')[1];
   const { imageBase64: processedImage } = await callApi<{ imageBase64: string }>('process-image', {
-    imageBase64,
+    imageBase64: pureBase64,
     mimeType,
     pieceCount,
   });
@@ -36,8 +38,9 @@ export const generateDescription = async (
   cleanedImageBase64: string,
   options: GenerationOptions
 ): Promise<{ description: string; command: string }> => {
+  const pureBase64 = cleanedImageBase64.split(',')[1];
   return await callApi<{ description: string; command: string }>('generate-description', {
-    cleanedImageBase64,
+    cleanedImageBase64: pureBase64,
     options,
   });
 };
@@ -47,12 +50,13 @@ export const generateModelImage = async (
     continuationCommand: string,
     referenceImageBase64s: string[]
 ): Promise<string> => {
-    // A API espera base64 puro, sem o prefixo "data:image/jpeg;base64,"
-    const pureBase64s = referenceImageBase64s.map(ref => ref.split(',')[1]);
+    const pureCleanedBase64 = cleanedImageBase64.split(',')[1];
+    const pureReferenceBase64s = referenceImageBase64s.map(ref => ref.split(',')[1]);
+
     const { imageBase64: modelImage } = await callApi<{ imageBase64: string }>('generate-model-image', {
-        cleanedImageBase64,
+        cleanedImageBase64: pureCleanedBase64,
         continuationCommand,
-        referenceImageBase64s: pureBase64s,
+        referenceImageBase64s: pureReferenceBase64s,
     });
     return modelImage;
 };
@@ -62,9 +66,10 @@ export const editImage = async (
   maskBase64: string,
   prompt: string
 ): Promise<string> => {
+    const pureOriginalBase64 = originalImageBase64.split(',')[1];
     const { imageBase64: editedImage } = await callApi<{ imageBase64: string }>('edit-image', {
-        originalImageBase64,
-        maskBase64,
+        originalImageBase64: pureOriginalBase64,
+        maskBase64, // A máscara já está sem o prefixo
         prompt,
     });
     return editedImage;
