@@ -11,7 +11,7 @@ import { ImageEditor } from '../../components/ImageEditor';
 import { LookBuilderPanel } from '../../components/LookBuilderPanel';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { processImage, generateDescription, generateModelImage, editImage } from '../../services/geminiService';
-import { combineImages } from '../../utils/fileUtils';
+import { combineImages, fileToDataUrl } from '../../utils/fileUtils';
 import type { 
   ProcessingState,
   ProductOutput,
@@ -44,26 +44,25 @@ export default function Index() {
     background: '',
   });
 
-    const handleImageUpload = async (part: keyof ClothingImagesState, file: File) => {
-        const dataUrl = URL.createObjectURL(file);
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                setClothingImages(prev => ({ ...prev, [part]: reader.result }));
-            }
-        };
-        setProductOutput(null);
-        setError(null);
-        setProcessingState({ step: ProcessingStep.IDLE });
-        setIsEditing(false);
-    };
+    const handleImageUpload = useCallback(async (part: keyof ClothingImagesState, file: File) => {
+        try {
+            const dataUrl = await fileToDataUrl(file);
+            setClothingImages(prev => ({ ...prev, [part]: dataUrl }));
 
-    const handleRemoveImage = (part: keyof ClothingImagesState) => {
+            setProductOutput(null);
+            setError(null);
+            setProcessingState({ step: ProcessingStep.IDLE });
+            setIsEditing(false);
+        } catch (err: any) {
+            console.error("Erro ao converter arquivo para data URL:", err);
+            setError(err.message || "Ocorreu um erro ao carregar a imagem.");
+            setProcessingState({ step: ProcessingStep.ERROR });
+        }
+    }, [setClothingImages]);
+
+    const handleRemoveImage = useCallback((part: keyof ClothingImagesState) => {
         setClothingImages(prev => ({...prev, [part]: null}));
-    };
+    }, [setClothingImages]);
 
     const handleProcessImage = useCallback(async () => {
         let imagesToProcess: string[] = [];
