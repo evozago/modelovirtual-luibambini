@@ -15,7 +15,7 @@ root.render(
   </React.StrictMode>
 );
 
-// --- Script to handle simulated Shopify product page interaction ---
+// --- Script to handle Shopify product page interaction ---
 const LOOK_BUILDER_STORAGE_KEY = 'lui-bambini-look-builder';
 
 type ClothingPiece = 'top' | 'bottom' | 'shoes' | 'combined';
@@ -111,13 +111,18 @@ function handleButtonClick(event: MouseEvent) {
 
 // --- Main script execution ---
 
-const buttons = document.querySelectorAll('.add-to-look-btn');
-buttons.forEach(button => {
-  button.addEventListener('click', handleButtonClick);
-});
+function initializeLookBuilder() {
+    const buttons = document.querySelectorAll('.add-to-look-btn');
+    buttons.forEach(button => {
+      button.addEventListener('click', handleButtonClick);
+    });
 
-// Listen for changes from the React app (e.g., user removes image in modal)
-window.addEventListener('storage', updateButtonsState);
+    // Listen for changes from the React app (e.g., user removes image in modal)
+    window.addEventListener('storage', updateButtonsState);
 
-// Set initial state on load
-updateButtonsState();
+    // Set initial state on load
+    updateButtonsState();
+}
+
+// Wait for the full page to load before trying to find the buttons
+document.addEventListener('DOMContentLoaded', initializeLookBuilder);
