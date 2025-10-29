@@ -46,12 +46,10 @@
       if (isThisButtonSelected) {
         button.textContent = 'Adicionado ✔';
         button.classList.add('added');
-        button.style.backgroundColor = '#16a34a'; // Verde
         button.disabled = false; // Sempre permitir desmarcar
       } else {
         button.textContent = 'Adicionar ao Look';
         button.classList.remove('added');
-        button.style.backgroundColor = '#4f46e5'; // Cor original
 
         let isDisabled = false;
         if (type === 'combined') {
@@ -61,7 +59,6 @@
         }
         
         button.disabled = isDisabled;
-        button.style.backgroundColor = isDisabled ? '#d1d5db' : '#4f46e5';
       }
     });
   }
