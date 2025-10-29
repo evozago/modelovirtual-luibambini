@@ -26,6 +26,24 @@ interface Look {
   combined: string | null;
 }
 
+/**
+ * Debounce function to limit the rate at which a function gets called.
+ * This is crucial for performance when observing DOM mutations.
+ */
+function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+    const debounced = (...args: Parameters<F>) => {
+      if (timeout !== null) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => func(...args), waitFor);
+    };
+  
+    return debounced as (...args: Parameters<F>) => void;
+}
+
+
 function getLookFromStorage(): Look {
   const saved = localStorage.getItem(LOOK_BUILDER_STORAGE_KEY);
   return saved ? JSON.parse(saved) : { top: null, bottom: null, shoes: null, combined: null };
@@ -63,12 +81,11 @@ function updateButtonsState() {
     } else {
       button.textContent = 'Adicionar ao Look';
       button.classList.remove('added');
-      // Disable if another item of the same type is already selected
+      
       const isTypeSelected = selectedTypes.includes(type);
       const isCombinedSelected = !!look.combined;
       const isSeparateSelected = !!look.top || !!look.bottom || !!look.shoes;
       
-      // Complex disable logic
       if (type === 'combined') {
         button.disabled = isSeparateSelected;
       } else if (['top', 'bottom', 'shoes'].includes(type)) {
@@ -80,6 +97,8 @@ function updateButtonsState() {
   });
 }
 
+const debouncedUpdateButtonsState = debounce(updateButtonsState, 50);
+
 function handleDelegatedButtonClick(event: MouseEvent) {
   const target = event.target as HTMLElement;
   const button = target.closest<HTMLButtonElement>('.add-to-look-btn');
@@ -88,11 +107,9 @@ function handleDelegatedButtonClick(event: MouseEvent) {
     return;
   }
   
-  // We've captured the click on our button at the earliest possible stage (window capture).
-  // Now, we stop any other scripts from handling it.
   event.preventDefault();
-  event.stopPropagation(); // Stops capture/bubble phases.
-  event.stopImmediatePropagation(); // Stops other listeners on the same element (window) from running.
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
   const { productType, productImage } = button.dataset;
 
@@ -101,11 +118,9 @@ function handleDelegatedButtonClick(event: MouseEvent) {
   const type = productType as ClothingPiece;
   const currentLook = getLookFromStorage();
   
-  // If this item is already selected, remove it. Otherwise, add it.
   if (currentLook[type] === productImage) {
     currentLook[type] = null;
   } else {
-    // Clear conflicting types
     if (type === 'combined') {
         currentLook.top = null;
         currentLook.bottom = null;
@@ -117,22 +132,39 @@ function handleDelegatedButtonClick(event: MouseEvent) {
   }
   
   saveLookToStorage(currentLook);
-  updateButtonsState();
+  debouncedUpdateButtonsState();
 }
 
 // --- Main script execution ---
 
 function initializeLookBuilder() {
-    // Attach listener to the window in the capture phase (`true`). This is the earliest possible point
-    // to intercept a click, making it extremely difficult for other scripts (like from the theme or other apps) to interfere.
     window.addEventListener('click', handleDelegatedButtonClick, true);
     
-    // Listen for changes from the React app (e.g., user removes image in modal)
-    window.addEventListener('storage', updateButtonsState);
+    window.addEventListener('storage', debouncedUpdateButtonsState);
+
+    // Use a MutationObserver to detect when new buttons are added to the page
+    // by the Shopify theme (e.g., when changing product variants). This ensures
+    // the button states are always correct.
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                 const hasRelevantNode = Array.from(mutation.addedNodes).some(node => 
+                    node.nodeType === Node.ELEMENT_NODE &&
+                    ((node as Element).matches('.add-to-look-btn') || (node as Element).querySelector('.add-to-look-btn'))
+                );
+
+                if (hasRelevantNode) {
+                    debouncedUpdateButtonsState();
+                    break; 
+                }
+            }
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
 
     // Set initial state on load
     updateButtonsState();
 }
 
-// Since this is an ES module, it's deferred by default. The DOM will be ready when it runs.
 initializeLookBuilder();
