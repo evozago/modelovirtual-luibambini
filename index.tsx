@@ -88,10 +88,11 @@ function handleDelegatedButtonClick(event: MouseEvent) {
     return;
   }
   
-  // We've captured the click on our button. 
-  // Prevent any other scripts from handling it and stop default browser behavior.
+  // We've captured the click on our button at the earliest possible stage (window capture).
+  // Now, we stop any other scripts from handling it.
   event.preventDefault();
-  event.stopPropagation();
+  event.stopPropagation(); // Stops capture/bubble phases.
+  event.stopImmediatePropagation(); // Stops other listeners on the same element (window) from running.
 
   const { productType, productImage } = button.dataset;
 
@@ -122,9 +123,9 @@ function handleDelegatedButtonClick(event: MouseEvent) {
 // --- Main script execution ---
 
 function initializeLookBuilder() {
-    // Use event delegation on the body, but in the CAPTURE phase (the `true` argument).
-    // This ensures our listener runs before any others on the page that might stop the event.
-    document.body.addEventListener('click', handleDelegatedButtonClick, true);
+    // Attach listener to the window in the capture phase (`true`). This is the earliest possible point
+    // to intercept a click, making it extremely difficult for other scripts (like from the theme or other apps) to interfere.
+    window.addEventListener('click', handleDelegatedButtonClick, true);
     
     // Listen for changes from the React app (e.g., user removes image in modal)
     window.addEventListener('storage', updateButtonsState);
