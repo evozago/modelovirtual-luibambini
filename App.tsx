@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ProcessingView } from './components/ProcessingView';
 import { ResultsCard } from './components/ResultsCard';
 import { LogoIcon, GithubIcon } from './components/Icons';
@@ -16,6 +16,19 @@ import { Modal } from './components/Modal';
 import { useAppBridge } from '@shopify/app-bridge-react';
 
 
+// This sub-component safely calls the Shopify hook.
+const ShopifyConnectionStatus = () => {
+    // This hook will only be called when the component is rendered,
+    // and we'll only render it if we're in a Shopify context.
+    const appBridge = useAppBridge();
+    return (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full shadow z-50">
+          Conectado à loja Shopify...
+        </div>
+    );
+};
+
+
 export default function App() {
   const [uploadMode, setUploadMode] = usePersistentState<'separate' | 'combined'>('lui-bambini-upload-mode', 'separate');
   const [clothingImages, setClothingImages] = usePersistentState<ClothingImagesState>('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
@@ -26,7 +39,12 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   
-  const appBridge = useAppBridge();
+  // Safely check if we are in a Shopify context by looking at URL params
+  const isInShopifyContext = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('host') && params.get('shop');
+  }, []);
+
 
   const [generationOptions, setGenerationOptions] = useState<Omit<GenerationOptions, 'pieceCount'>>({
     gender: Gender.FEMALE,
@@ -65,8 +83,6 @@ export default function App() {
 
     try {
       setProcessingState({ step: ProcessingStep.CLEANING });
-      const referenceImageBase64s = imagesToProcess.map(dataUrl => dataUrl.split(',')[1]);
-      
       const { combinedImageBase64, mimeType } = await combineImages(...imagesToProcess);
       
       setProcessingState({ step: ProcessingStep.CLEANING });
@@ -74,13 +90,13 @@ export default function App() {
 
       setProcessingState({ step: ProcessingStep.GENERATING_TEXT });
       const textGenOptions: GenerationOptions = { ...generationOptions, pieceCount: PieceCount.SET };
-      const { description, command } = await generateDescription(cleanedImageBase64, textGenOptions);
+      const { description, command } = await generateDescription(`data:image/png;base64,${cleanedImageBase64}`, textGenOptions);
 
       setProcessingState({ step: ProcessingStep.GENERATE_MODEL_IMAGE });
       const modelImageBase64 = await generateModelImage(
-        cleanedImageBase64, 
+        `data:image/png;base64,${cleanedImageBase64}`, 
         command,
-        referenceImageBase64s
+        imagesToProcess // Pass the original data URLs
       );
 
       setProductOutput({
@@ -105,7 +121,7 @@ export default function App() {
     try {
         setProcessingState({ step: ProcessingStep.EDITING });
         const editedImageBase64 = await editImage(
-            productOutput.modelImage.split(',')[1],
+            productOutput.modelImage,
             maskBase64,
             editPrompt
         );
@@ -181,11 +197,8 @@ export default function App() {
   
   return (
     <div className="min-h-screen bg-transparent flex flex-col items-center">
-       {appBridge && (
-          <div className="fixed top-2 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full shadow z-50">
-            Conectado à loja Shopify...
-          </div>
-        )}
+       {isInShopifyContext && <ShopifyConnectionStatus />}
+
       <LookBuilderHub onClick={() => setIsEditorOpen(true)} />
       
       <Modal isOpen={isEditorOpen} onClose={() => setIsEditorOpen(false)} title="Montador de Looks com IA">
