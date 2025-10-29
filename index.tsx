@@ -114,8 +114,6 @@ const ShopifyLookBuilder = (() => {
   }
   
   function run() {
-    console.log('[LookBuilder] Initializing on page.');
-
     // Listen for clicks on the entire window during the "capture" phase.
     // This allows our script to be the first to react to a click.
     window.addEventListener('click', handleClick, true);
@@ -181,3 +179,4 @@ if (rootElement) {
   // This means we are on the live Shopify store.
   ShopifyLookBuilder.initialize();
 }
+// If we are in an iframe (like the theme editor), do nothing.
