@@ -1,40 +1,59 @@
 import React, { useState, useCallback } from 'react';
-import { ProcessingView } from '../components/ProcessingView';
-import { ResultsCard } from '../components/ResultsCard';
-import { LogoIcon } from '../components/Icons';
-import { processImage, generateDescription, generateModelImage, editImage } from '../services/geminiService';
-import { combineImages } from '../utils/fileUtils';
-import { ProcessingStep, Gender, Age, Theme, PieceCount } from '../types';
-import { GenerationOptionsForm } from '../components/GenerationOptionsForm';
-import { ImageEditor } from '../components/ImageEditor';
-import { usePersistentState } from '../hooks/usePersistentState';
-import { LookBuilderPanel } from '../components/LookBuilderPanel';
+
+// NOTA DE REFACTOR: O código foi atualizado para usar TypeScript e para importar os componentes, hooks e serviços da raiz do projeto (ex: ../../components).
+// Isso centraliza o código e remove a dependência dos arquivos duplicados e sem tipos que existiam dentro da pasta 'app/'. 
+// Recomenda-se remover as pastas duplicadas como 'app/components', 'app/hooks' e 'app/services' para evitar confusão futura.
+import { ProcessingView } from '../../components/ProcessingView';
+import { ResultsCard } from '../../components/ResultsCard';
+import { LogoIcon } from '../../components/Icons';
+import { GenerationOptionsForm } from '../../components/GenerationOptionsForm';
+import { ImageEditor } from '../../components/ImageEditor';
+import { LookBuilderPanel } from '../../components/LookBuilderPanel';
+import { usePersistentState } from '../../hooks/usePersistentState';
+import { processImage, generateDescription, generateModelImage, editImage } from '../../services/geminiService';
+import { combineImages } from '../../utils/fileUtils';
+import type { 
+  ProcessingState,
+  ProductOutput,
+  GenerationOptions,
+  ClothingImagesState,
+} from '../../types';
+import { 
+  ProcessingStep, 
+  Gender, 
+  Age, 
+  Theme, 
+  PieceCount
+} from '../../types';
+
 
 // No Remix, a exportação padrão de um arquivo de rota é o componente da página.
 export default function Index() {
-  const [uploadMode, setUploadMode] = usePersistentState('lui-bambini-upload-mode', 'separate');
-  const [clothingImages, setClothingImages] = usePersistentState('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
+  const [uploadMode, setUploadMode] = usePersistentState<'separate' | 'combined'>('lui-bambini-upload-mode', 'separate');
+  const [clothingImages, setClothingImages] = usePersistentState<ClothingImagesState>('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
 
-  const [processingState, setProcessingState] = useState({ step: ProcessingStep.IDLE });
-  const [productOutput, setProductOutput] = useState(null);
-  const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [processingState, setProcessingState] = useState<ProcessingState>({ step: ProcessingStep.IDLE });
+  const [productOutput, setProductOutput] = useState<ProductOutput | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const [generationOptions, setGenerationOptions] = useState({
+  const [generationOptions, setGenerationOptions] = useState<Omit<GenerationOptions, 'pieceCount'>>({
     gender: Gender.FEMALE,
     age: Age.FOUR_TO_EIGHT,
     theme: Theme.CASUAL,
     background: '',
   });
 
-    const handleImageUpload = async (part, file) => {
+    const handleImageUpload = async (part: keyof ClothingImagesState, file: File) => {
         const dataUrl = URL.createObjectURL(file);
         const response = await fetch(dataUrl);
         const blob = await response.blob();
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onloadend = () => {
-            setClothingImages(prev => ({ ...prev, [part]: reader.result }));
+            if (typeof reader.result === 'string') {
+                setClothingImages(prev => ({ ...prev, [part]: reader.result }));
+            }
         };
         setProductOutput(null);
         setError(null);
@@ -42,18 +61,18 @@ export default function Index() {
         setIsEditing(false);
     };
 
-    const handleRemoveImage = (part) => {
+    const handleRemoveImage = (part: keyof ClothingImagesState) => {
         setClothingImages(prev => ({...prev, [part]: null}));
     };
 
     const handleProcessImage = useCallback(async () => {
-        let imagesToProcess = [];
+        let imagesToProcess: string[] = [];
         if (uploadMode === 'separate') {
             if (!clothingImages.top || !clothingImages.bottom) return;
-            imagesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter(img => img !== null);
+            imagesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter((img): img is string => img !== null);
         } else {
             if (!clothingImages.combined) return;
-            imagesToProcess = [clothingImages.combined, clothingImages.shoes].filter(img => img !== null);
+            imagesToProcess = [clothingImages.combined, clothingImages.shoes].filter((img): img is string => img !== null);
         }
         
         if (imagesToProcess.length === 0) return;
@@ -68,7 +87,7 @@ export default function Index() {
         const cleanedImageBase64 = await processImage(combinedImageBase64, mimeType, PieceCount.SET);
 
         setProcessingState({ step: ProcessingStep.GENERATING_TEXT });
-        const textGenOptions = { ...generationOptions, pieceCount: PieceCount.SET };
+        const textGenOptions: GenerationOptions = { ...generationOptions, pieceCount: PieceCount.SET };
         const { description, command } = await generateDescription(`data:image/png;base64,${cleanedImageBase64}`, textGenOptions);
 
         setProcessingState({ step: ProcessingStep.GENERATE_MODEL_IMAGE });
@@ -85,14 +104,14 @@ export default function Index() {
             continuationCommand: command,
         });
         setProcessingState({ step: ProcessingStep.DONE });
-        } catch (err) {
+        } catch (err: any) {
         console.error(err);
         setError(err.message || 'Ocorreu um erro ao processar as imagens.');
         setProcessingState({ step: ProcessingStep.ERROR });
         }
     }, [clothingImages, generationOptions, uploadMode]);
 
-    const handleEditImage = useCallback(async (maskBase64, editPrompt) => {
+    const handleEditImage = useCallback(async (maskBase64: string, editPrompt: string) => {
         if (!productOutput) return;
 
         setIsEditing(false);
@@ -111,7 +130,7 @@ export default function Index() {
             }) : null);
             
             setProcessingState({ step: ProcessingStep.DONE });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             setError(err.message || 'Ocorreu um erro ao editar a imagem.');
             setProcessingState({ step: ProcessingStep.ERROR });
