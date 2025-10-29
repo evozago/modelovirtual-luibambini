@@ -88,6 +88,11 @@ function handleDelegatedButtonClick(event: MouseEvent) {
     return;
   }
   
+  // We've captured the click on our button. 
+  // Prevent any other scripts from handling it and stop default browser behavior.
+  event.preventDefault();
+  event.stopPropagation();
+
   const { productType, productImage } = button.dataset;
 
   if (!productType || !productImage) return;
@@ -117,8 +122,9 @@ function handleDelegatedButtonClick(event: MouseEvent) {
 // --- Main script execution ---
 
 function initializeLookBuilder() {
-    // Use event delegation on the body to handle clicks on buttons that might be added dynamically by the theme
-    document.body.addEventListener('click', handleDelegatedButtonClick);
+    // Use event delegation on the body, but in the CAPTURE phase (the `true` argument).
+    // This ensures our listener runs before any others on the page that might stop the event.
+    document.body.addEventListener('click', handleDelegatedButtonClick, true);
     
     // Listen for changes from the React app (e.g., user removes image in modal)
     window.addEventListener('storage', updateButtonsState);
