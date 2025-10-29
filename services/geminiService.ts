@@ -1,7 +1,8 @@
-// services/geminiService.ts - VERSÃO FINAL CORRIGIDA
+// services/geminiService.ts
 import type { GenerationOptions, PieceCount } from '../types';
 
-// O endereço do nosso "escritório seguro" que agora mora junto com o site.
+// O endpoint da API agora aponta para uma rota de recurso no seu app Remix.
+// Isso mantém suas chaves de API seguras no servidor.
 const API_ENDPOINT = '/api/generate';
 
 async function callApi<T>(action: string, payload: object): Promise<T> {
@@ -10,6 +11,7 @@ async function callApi<T>(action: string, payload: object): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
     },
+    // O corpo agora inclui a 'action' para que o backend saiba o que fazer.
     body: JSON.stringify({ action, payload }),
   });
 
@@ -24,7 +26,6 @@ async function callApi<T>(action: string, payload: object): Promise<T> {
 }
 
 export const processImage = async (imageBase64: string, mimeType: string, pieceCount: PieceCount): Promise<string> => {
-  // A API espera base64 puro, sem o prefixo
   const pureBase64 = imageBase64.split(',')[1];
   const { imageBase64: processedImage } = await callApi<{ imageBase64: string }>('process-image', {
     imageBase64: pureBase64,

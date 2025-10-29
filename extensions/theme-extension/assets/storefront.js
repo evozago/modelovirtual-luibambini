@@ -1,18 +1,14 @@
-
 // Este é o script que roda na sua loja online.
 // Ele é responsável por toda a interatividade dos botões "Adicionar ao Look".
 
 (() => {
   const STORAGE_KEY = 'lui-bambini-look-builder';
 
-  // Tipos de peças de roupa
-  const clothingPieces = ['top', 'bottom', 'shoes', 'combined'];
-
   function getLook() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const look = saved ? JSON.parse(saved) : {};
-      // Garante que a estrutura base exista
+      // Garante que a estrutura base sempre exista
       return { top: null, bottom: null, shoes: null, combined: null, ...look };
     } catch (e) {
       console.error('[LookBuilder] Erro ao ler o look do localStorage:', e);
@@ -65,9 +61,7 @@
         }
         
         button.disabled = isDisabled;
-        if (isDisabled) {
-            button.style.backgroundColor = '#d1d5db'; // Cinza para desabilitado
-        }
+        button.style.backgroundColor = isDisabled ? '#d1d5db' : '#4f46e5';
       }
     });
   }
@@ -76,9 +70,9 @@
     const button = event.target.closest('.add-to-look-btn');
     if (!button) return;
 
-    // Impede que outros scripts interfiram
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
 
     const type = button.dataset.productType;
     const image = button.dataset.productImage;
@@ -93,7 +87,7 @@
       if (type === 'combined') {
         currentLook.top = null;
         currentLook.bottom = null;
-        currentLook.shoes = null;
+        // Mantem os sapatos se ja houver
       } else {
         currentLook.combined = null;
       }
@@ -105,13 +99,10 @@
   }
 
   function initialize() {
-    console.log('[LookBuilder] Script da loja inicializado.');
-    // Usamos 'mousedown' na fase de captura para garantir que sejamos os primeiros a responder.
-    document.body.addEventListener('mousedown', handleClick, true);
+    // Usamos 'click' na fase de captura para garantir que sejamos os primeiros a responder.
+    window.addEventListener('click', handleClick, true);
 
-    // Observador para lidar com atualizações dinâmicas do tema (troca de variantes, etc.)
     const observer = new MutationObserver(() => {
-        // Um simples debounce para evitar múltiplas execuções
         clearTimeout(observer.timeout);
         observer.timeout = setTimeout(updateAllButtons, 50);
     });
@@ -120,7 +111,6 @@
     updateAllButtons();
   }
 
-  // Garante que o script rode apenas quando o DOM estiver pronto.
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
   } else {

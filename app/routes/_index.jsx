@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ProcessingView } from '../components/ProcessingView';
 import { ResultsCard } from '../components/ResultsCard';
@@ -10,11 +9,9 @@ import { GenerationOptionsForm } from '../components/GenerationOptionsForm';
 import { ImageEditor } from '../components/ImageEditor';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { LookBuilderPanel } from '../components/LookBuilderPanel';
-import { LookBuilderHub } from '../components/LookBuilderHub';
-import { Modal } from '../components/Modal';
 
 // No Remix, a exportação padrão de um arquivo de rota é o componente da página.
-export default function App() {
+export default function Index() {
   const [uploadMode, setUploadMode] = usePersistentState('lui-bambini-upload-mode', 'separate');
   const [clothingImages, setClothingImages] = usePersistentState('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
 
@@ -22,7 +19,6 @@ export default function App() {
   const [productOutput, setProductOutput] = useState(null);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(true); // Manter aberto por padrão no painel
 
   const [generationOptions, setGenerationOptions] = useState({
     gender: Gender.FEMALE,
@@ -179,9 +175,7 @@ export default function App() {
     }
     
     return (
-        // O Modal foi removido do render principal para simplificar a visualização no admin.
-        // O conteúdo é renderizado diretamente na página.
-        <main className="p-4 md:p-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-start bg-gray-50">
+        <main className="p-4 md:p-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-start bg-gray-50 min-h-screen">
            <LookBuilderPanel 
                 uploadMode={uploadMode}
                 setUploadMode={setUploadMode}
