@@ -1,187 +1,183 @@
+// This file has two jobs:
+// 1. Render the React App when on the main app page (which has an element with id="root").
+// 2. Run a script on the Shopify store pages to make the "Add to Look" buttons work.
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+// --- Part 1: Shopify Store Interaction Script ---
+
+const ShopifyLookBuilder = (() => {
+  const STORAGE_KEY = 'lui-bambini-look-builder';
+
+  type ClothingPiece = 'top' | 'bottom' | 'shoes' | 'combined';
+  interface Look {
+    top: string | null;
+    bottom: string | null;
+    shoes: string | null;
+    combined: string | null;
+  }
+
+  function getLook(): Look {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : { top: null, bottom: null, shoes: null, combined: null };
+  }
+
+  function saveLook(look: Look) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(look));
+    // Dispatch a custom event that the React app's hook can listen to,
+    // forcing it to update even though it's in the same tab.
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  function updateAllButtons() {
+    const look = getLook();
+    const buttons = document.querySelectorAll<HTMLButtonElement>('.add-to-look-btn');
+
+    const hasTop = !!look.top;
+    const hasBottom = !!look.bottom;
+    const hasShoes = !!look.shoes;
+    const hasCombined = !!look.combined;
+    const hasSeparatePieces = hasTop || hasBottom || hasShoes;
+
+    buttons.forEach(button => {
+      const type = button.dataset.productType as ClothingPiece;
+      const image = button.dataset.productImage;
+      if (!type || !image) return;
+
+      const isThisButtonSelected = look[type] === image;
+
+      if (isThisButtonSelected) {
+        button.textContent = 'Adicionado ✔';
+        button.classList.add('added');
+        button.disabled = false; // Always allow un-selecting
+      } else {
+        button.textContent = 'Adicionar ao Look';
+        button.classList.remove('added');
+
+        // Logic to disable buttons based on current selection
+        let isDisabled = false;
+        if (type === 'combined') {
+          isDisabled = hasSeparatePieces; // Disable combined if any separate piece is selected
+        } else if (['top', 'bottom', 'shoes'].includes(type)) {
+          isDisabled = hasCombined || !!look[type]; // Disable if combined is selected, or if this type is already filled by another item
+        }
+        button.disabled = isDisabled;
+      }
+    });
+  }
+
+  const debouncedUpdate = (() => {
+      let timeout: number;
+      return () => {
+          clearTimeout(timeout);
+          timeout = window.setTimeout(updateAllButtons, 50);
+      };
+  })();
+
+  function handleClick(event: MouseEvent) {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.add-to-look-btn');
+    if (!button) return;
+
+    // This is the most aggressive event stopping. It prevents any other script
+    // on the page from interfering with our button.
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const type = button.dataset.productType as ClothingPiece;
+    const image = button.dataset.productImage;
+    if (!type || !image) return;
+
+    const currentLook = getLook();
+    const isCurrentlySelected = currentLook[type] === image;
+
+    if (isCurrentlySelected) {
+      // If clicking an already added item, remove it.
+      currentLook[type] = null;
+    } else {
+      // If adding a new item...
+      if (type === 'combined') {
+        // Clear all separate items when adding a combined look
+        currentLook.top = null;
+        currentLook.bottom = null;
+        currentLook.shoes = null;
+      } else {
+        // Clear combined look when adding a separate piece
+        currentLook.combined = null;
+      }
+      currentLook[type] = image; // Add the new piece
+    }
+
+    saveLook(currentLook);
+    updateAllButtons(); // Update immediately on click
+  }
+  
+  function run() {
+    console.log('[LookBuilder] Initializing on page.');
+
+    // Listen for clicks on the entire window during the "capture" phase.
+    // This allows our script to be the first to react to a click.
+    window.addEventListener('click', handleClick, true);
+    
+    // Also listen for our custom storage event to keep buttons in sync.
+    window.addEventListener('storage', debouncedUpdate);
+
+    // Watch for the theme dynamically adding/removing content (like changing variants)
+    // and re-check our button states to keep them accurate.
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                 const hasRelevantNode = Array.from(mutation.addedNodes).some(node => 
+                    node.nodeType === Node.ELEMENT_NODE &&
+                    ((node as Element).matches('.add-to-look-btn') || (node as Element).querySelector('.add-to-look-btn'))
+                );
+                if (hasRelevantNode) {
+                    debouncedUpdate();
+                    break;
+                }
+            }
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Set the initial state for all buttons when the page loads.
+    updateAllButtons();
+  }
+
+  function initialize() {
+    // This script might run before the DOM is fully loaded.
+    // We ensure we only start working once everything is ready.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run);
+    } else {
+      run();
+    }
+  }
+  
+  // Expose only the initialize function to the outside.
+  return { initialize };
+})();
+
+// --- Part 2: Execution Logic ---
+
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  // This is expected on the Shopify store, where there's no #root element.
-  // The script below will run regardless.
-} else {
+
+if (rootElement) {
+  // We found a #root element, so this is our main app page (index.html).
+  // Render the React application.
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
   );
-}
 
+  // Also run the Shopify script on this page for the simulation to work.
+  ShopifyLookBuilder.initialize();
 
-// --- Script to handle Shopify product page interaction ---
-const LOOK_BUILDER_STORAGE_KEY = 'lui-bambini-look-builder';
-
-type ClothingPiece = 'top' | 'bottom' | 'shoes' | 'combined';
-
-interface Look {
-  top: string | null;
-  bottom: string | null;
-  shoes: string | null;
-  combined: string | null;
-}
-
-/**
- * Debounce function to limit the rate at which a function gets called.
- * This is crucial for performance when observing DOM mutations.
- */
-function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-  
-    const debounced = (...args: Parameters<F>) => {
-      if (timeout !== null) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => func(...args), waitFor);
-    };
-  
-    return debounced as (...args: Parameters<F>) => void;
-}
-
-
-function getLookFromStorage(): Look {
-  const saved = localStorage.getItem(LOOK_BUILDER_STORAGE_KEY);
-  return saved ? JSON.parse(saved) : { top: null, bottom: null, shoes: null, combined: null };
-}
-
-function saveLookToStorage(look: Look) {
-  console.log('[LookBuilder] Saving new look to storage:', look);
-  localStorage.setItem(LOOK_BUILDER_STORAGE_KEY, JSON.stringify(look));
-  // Dispatch a storage event so usePersistentState hook in React updates
-  window.dispatchEvent(new Event('storage'));
-}
-
-function updateButtonsState() {
-  const look = getLookFromStorage();
-  console.log('[LookBuilder] Updating button states. Current look:', look);
-  const buttons = document.querySelectorAll('.add-to-look-btn');
-  
-  const selectedTypes: ClothingPiece[] = [];
-  if (look.top) selectedTypes.push('top');
-  if (look.bottom) selectedTypes.push('bottom');
-  if (look.shoes) selectedTypes.push('shoes');
-  if (look.combined) selectedTypes.push('combined');
-
-  buttons.forEach(btnEl => {
-    const button = btnEl as HTMLButtonElement;
-    const { productType, productImage } = button.dataset;
-    const type = productType as ClothingPiece;
-    
-    if (!type) return;
-
-    const isSelected = look[type] === productImage;
-
-    if (isSelected) {
-      button.textContent = 'Adicionado ✔';
-      button.classList.add('added');
-      button.disabled = false;
-    } else {
-      button.textContent = 'Adicionar ao Look';
-      button.classList.remove('added');
-      
-      const isTypeSelected = selectedTypes.includes(type);
-      const isCombinedSelected = !!look.combined;
-      const isSeparateSelected = !!look.top || !!look.bottom || !!look.shoes;
-      
-      if (type === 'combined') {
-        button.disabled = isSeparateSelected;
-      } else if (['top', 'bottom', 'shoes'].includes(type)) {
-        button.disabled = isCombinedSelected || isTypeSelected;
-      } else {
-         button.disabled = isTypeSelected;
-      }
-    }
-  });
-}
-
-const debouncedUpdateButtonsState = debounce(updateButtonsState, 50);
-
-function handleDelegatedButtonClick(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  const button = target.closest<HTMLButtonElement>('.add-to-look-btn');
-
-  if (!button) {
-    return;
-  }
-  
-  console.log('[LookBuilder] Click detected on:', button);
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
-
-  const { productType, productImage } = button.dataset;
-  console.log('[LookBuilder] Button data:', { productType, productImage });
-
-
-  if (!productType || !productImage) {
-    console.warn('[LookBuilder] Button is missing data-product-type or data-product-image.');
-    return;
-  }
-
-  const type = productType as ClothingPiece;
-  const currentLook = getLookFromStorage();
-  
-  if (currentLook[type] === productImage) {
-    currentLook[type] = null;
-  } else {
-    if (type === 'combined') {
-        currentLook.top = null;
-        currentLook.bottom = null;
-        currentLook.shoes = null;
-    } else {
-        currentLook.combined = null;
-    }
-    currentLook[type] = productImage;
-  }
-  
-  saveLookToStorage(currentLook);
-  debouncedUpdateButtonsState();
-}
-
-// --- Main script execution ---
-
-function initializeLookBuilder() {
-    console.log('[LookBuilder] Initializing on Shopify store page.');
-    window.addEventListener('click', handleDelegatedButtonClick, true);
-    
-    window.addEventListener('storage', debouncedUpdateButtonsState);
-
-    // Use a MutationObserver to detect when new buttons are added to the page
-    // by the Shopify theme (e.g., when changing product variants). This ensures
-    // the button states are always correct.
-    const observer = new MutationObserver((mutationsList) => {
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                 const hasRelevantNode = Array.from(mutation.addedNodes).some(node => 
-                    node.nodeType === Node.ELEMENT_NODE &&
-                    ((node as Element).matches('.add-to-look-btn') || (node as Element).querySelector('.add-to-look-btn'))
-                );
-
-                if (hasRelevantNode) {
-                    console.log('[LookBuilder] Detected relevant DOM change, updating buttons.');
-                    debouncedUpdateButtonsState();
-                    break; 
-                }
-            }
-        }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Set initial state on load
-    updateButtonsState();
-}
-
-// Ensure the script only runs on the main window, not inside iframes like the theme editor.
-if (window.self === window.top) {
-    initializeLookBuilder();
-} else {
-    console.log('[LookBuilder] Script is in an iframe (e.g., Shopify Theme Editor), not initializing main listeners.');
+} else if (window.self === window.top) {
+  // There's no #root element, and we are not inside an iframe (like the theme editor).
+  // This means we are on the live Shopify store.
+  ShopifyLookBuilder.initialize();
 }
