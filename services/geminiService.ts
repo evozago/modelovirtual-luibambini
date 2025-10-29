@@ -1,183 +1,48 @@
-import { GoogleGenAI, Modality, Type } from '@google/genai';
-import type { GenerationOptions } from '../types';
-import { Age, Gender, PieceCount } from '../types';
+import type { GenerationOptions, PieceCount } from '../types';
 
-const API_KEY = process.env.API_KEY;
+// O endereço do seu "escritório seguro" que você me forneceu.
+const PIPEDREAM_WEBHOOK_URL = 'https://eoqrer10z88o5oo.m.pipedream.net';
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-const imageModel = 'gemini-2.5-flash-image';
-const textModel = 'gemini-2.5-flash';
-
-const createImageProcessingPrompt = (pieceCount: PieceCount): string => {
-  const pieceIdentifier = pieceCount === PieceCount.SET
-    ? "Identifique TODAS as peças de roupa que compõem o conjunto na imagem (ex: camisa, short e tênis)."
-    : "Identifique a peça de roupa principal (vestido, camiseta, etc.).";
-
-  const resultDescription = pieceCount === PieceCount.SET
-    ? "uma imagem PNG contendo APENAS o conjunto completo de peças de roupa"
-    : "uma imagem PNG contendo APENAS a peça de roupa principal";
-
-  return `A partir da imagem fornecida, execute as seguintes tarefas em ordem:
-1. ${pieceIdentifier}
-2. Remova completamente todos os outros elementos, incluindo o fundo, acessórios não pertencentes à(s) peça(s) (sapatos, laços, tiaras, brinquedos, etiquetas), e qualquer parte do corpo humano ou cabides.
-3. Se um acessório estiver sobre uma das peças, use inpainting para reconstruir de forma realista o tecido por baixo, mantendo a textura, cor e padrão originais.
-4. O resultado final DEVE SER ${resultDescription}, centralizado, sobre um fundo 100% transparente.`;
-};
-
-
-const createTextGenerationPrompt = (options: GenerationOptions) => {
-  const { gender, age, theme, background, pieceCount } = options;
-
-  let subject: string;
-  if (age === Age.BABY) {
-    subject = 'um bebê';
-  } else {
-    subject = gender === Gender.MALE ? 'um menino' : 'uma menina';
-  }
-
-  const continuationCommandTemplate = `Gerar imagem de ${subject} de ${age} vestindo [DESCRIÇÃO], mantendo fielmente todas as características, cores e detalhes originais da roupa. ${
-    background
-      ? `O cenário deve ser "${background}" com um tema de "${theme}".`
-      : `O cenário deve ser adequado para um tema de "${theme}".`
-  } Permitir acessórios harmoniosos e cenário adequado, mas sem modificar a peça original.`;
-
-  const pieceTypeInstruction = pieceCount === PieceCount.SET
-    ? "A imagem contém um conjunto de roupas. Descreva o conjunto (ex: 'Conjunto de camiseta, short e tênis')."
-    : "A imagem contém uma peça de roupa única. Descreva a peça (ex: 'Vestido floral vermelho').";
-
-  return `Recebe: imagem limpa (imagem final da peça ou conjunto sem fundo).
-
-Tarefa 1 — Descrição curta:
-Crie uma descrição breve e objetiva no formato:
-[tipo da peça ou conjunto] [característica principal] [cor ou estampa]
-${pieceTypeInstruction}
-Exemplos: "Vestido floral vermelho", "Conjunto listrado azul com tênis branco", "Macacão jeans claro".
-A descrição deve ter no máximo 10 palavras e ser direta.
-
-Tarefa 2 — Comando de continuação para geração de modelo:
-Usando a descrição que você gerou na Tarefa 1 para preencher o campo [DESCRIÇÃO], crie o comando de continuação EXATAMENTE no seguinte formato:
-"${continuationCommandTemplate}"
-
-Regras:
-- Use apenas as informações visuais na imagem limpa.
-- Não adicione nem elimine detalhes da peça.
-- Responda com um objeto JSON contendo as chaves "description" e "command".`;
-};
-
-const modelImageSystemInstruction = `Você é um especialista em IA para fotografia de moda infantil, com um olhar meticuloso para detalhes. Sua tarefa segue um processo de duas etapas: Geração e Auto-Correção Crítica.
-
-**Regras Imperativas:**
-
-1.  **Fidelidade Absoluta à Peça**: Você receberá uma imagem 'limpa' (o que vestir) e imagens 'originais' (como deve parecer). Sua prioridade MÁXIMA é a fidelidade às imagens originais de referência. Preserve 100% das cores, estampas, texturas, bordados, costuras e proporções. NÃO redesenhe ou altere a(s) peça(s).
-2.  **Uso das Imagens de Referência**: Use a imagem 'limpa' para aplicar sobre o corpo do modelo. Use as imagens 'originais' para recriar todos os detalhes com perfeição.
-3.  **Ajuste de Tamanho e Caimento**: Adapte a(s) peça(s) proporcionalmente à faixa etária solicitada no prompt. O caimento, dobras, iluminação e perspectiva devem parecer naturais, mas o resultado final deve ser idêntico às referências.
-4.  **Acessórios e Cenário**: Adicione acessórios e crie um cenário que correspondam ao prompt, mas que não modifiquem a(s) peça(s) principal(is).
-5.  **Segurança e Respeito**: As poses devem ser apropriadas para a idade da criança. É PROIBIDO sexualizar a imagem.
-
-**Processo de Auto-Correção Crítica:**
-
-1.  **Gere a imagem inicial** da modelo vestindo a roupa.
-2.  **PARE. FAÇA UMA RELEITURA.** Compare sua imagem gerada com as imagens de referência originais.
-3.  **Analise os detalhes críticos:**
-    *   Textura do tecido (ex: canelado, jeans, algodão).
-    *   Bordados ou apliques (ex: laços, botões).
-    *   Tipo de barra (ex: desfiada, dobrada, com costura).
-    *   Cores e estampas exatas.
-4.  **Corrija QUALQUER imprecisão.** Refine a imagem até que seja uma representação fotográfica fiel das peças originais.
-5.  **Entregue apenas o resultado final corrigido.**`;
-
-
-export const processImage = async (imageBase64: string, mimeType: string, pieceCount: PieceCount): Promise<string> => {
-  const imageProcessingPrompt = createImageProcessingPrompt(pieceCount);
-  
-  const response = await ai.models.generateContent({
-    model: imageModel,
-    contents: {
-      parts: [
-        {
-          inlineData: {
-            data: imageBase64,
-            mimeType: mimeType,
-          },
-        },
-        {
-          text: imageProcessingPrompt,
-        },
-      ],
-    },
-    config: {
-      responseModalities: [Modality.IMAGE],
-    },
+/**
+ * Função central para se comunicar com o seu backend seguro no Pipedream.
+ * @param action - A tarefa a ser executada (ex: 'generate-model-image').
+ * @param payload - Os dados necessários para a tarefa (ex: imagens, opções).
+ * @returns A resposta do backend.
+ */
+async function callPipedreamApi<T>(action: string, payload: object): Promise<T> {
+  const response = await fetch(PIPEDREAM_WEBHOOK_URL, {
+    method: 'POST',
+    // O Pipedream não exige 'Content-Type' para webhooks, mas é uma boa prática.
+    // O corpo da requisição agora inclui a ação e os dados para o Pipedream saber o que fazer.
+    body: JSON.stringify({ action, payload }),
   });
 
-  const imagePart = response.candidates?.[0]?.content?.parts?.[0];
-  if (imagePart && imagePart.inlineData) {
-    return imagePart.inlineData.data;
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(`Erro na API do Pipedream (${response.status}) para a ação ${action}: ${errorBody}`);
+    throw new Error(`Ocorreu um erro de comunicação com o servidor de IA (${response.status}). Por favor, tente novamente.`);
   }
-  
-  throw new Error('Falha ao processar a imagem. A resposta da IA não continha uma imagem.');
+
+  return response.json();
+}
+
+export const processImage = async (imageBase64: string, mimeType: string, pieceCount: PieceCount): Promise<string> => {
+  const { imageBase64: processedImage } = await callPipedreamApi<{ imageBase64: string }>('process-image', {
+    imageBase64,
+    mimeType,
+    pieceCount,
+  });
+  return processedImage;
 };
 
 export const generateDescription = async (
   cleanedImageBase64: string,
   options: GenerationOptions
 ): Promise<{ description: string; command: string }> => {
-  const textGenerationPrompt = createTextGenerationPrompt(options);
-
-  const response = await ai.models.generateContent({
-    model: textModel,
-    contents: {
-      parts: [
-        {
-          inlineData: {
-            data: cleanedImageBase64,
-            mimeType: 'image/png',
-          },
-        },
-        { text: textGenerationPrompt },
-      ],
-    },
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          description: {
-            type: Type.STRING,
-            description: 'Descrição curta da peça ou conjunto de roupa.',
-          },
-          command: {
-            type: Type.STRING,
-            description:
-              'Comando de continuação para gerar uma imagem de modelo.',
-          },
-        },
-        required: ['description', 'command'],
-      },
-    },
+  return await callPipedreamApi<{ description: string; command: string }>('generate-description', {
+    cleanedImageBase64,
+    options,
   });
-
-  try {
-    const result = JSON.parse(response.text);
-    if (
-      result &&
-      typeof result.description === 'string' &&
-      typeof result.command === 'string'
-    ) {
-      return result;
-    }
-  } catch (e) {
-    console.error('Failed to parse JSON response:', e, response.text);
-  }
-
-  throw new Error(
-    'Falha ao gerar descrição. A resposta da IA não está no formato esperado.'
-  );
 };
 
 export const generateModelImage = async (
@@ -185,46 +50,12 @@ export const generateModelImage = async (
     continuationCommand: string,
     referenceImageBase64s: string[]
 ): Promise<string> => {
-    const technicalCommand = `${continuationCommand}. A roupa vestida no modelo deve ser IDÊNTICA às imagens originais de referência fornecidas. Após a geração inicial, compare sua imagem com as referências e corrija qualquer imprecisão antes de apresentar o resultado final. A fidelidade é o critério mais importante.`;
-    
-    const referenceParts = referenceImageBase64s.map(refBase64 => ({
-        inlineData: {
-            data: refBase64,
-            mimeType: 'image/jpeg', // Assume jpeg or png, jpeg is more common for photos
-        }
-    }));
-
-    const response = await ai.models.generateContent({
-      model: imageModel,
-      contents: {
-        parts: [
-          { text: "Esta é a roupa limpa, sem fundo, que deve ser vestida no modelo:" },
-          {
-            inlineData: {
-              data: cleanedImageBase64,
-              mimeType: 'image/png',
-            },
-          },
-          { text: "Use as seguintes imagens originais como referência de ALTA FIDELIDADE para os detalhes, texturas e cores exatas:" },
-          ...referenceParts,
-          {
-            text: technicalCommand,
-          },
-        ],
-      },
-      config: {
-        responseModalities: [Modality.IMAGE],
-        systemInstruction: modelImageSystemInstruction,
-        temperature: 0.1, // Lower temperature for less creativity and more fidelity
-      },
+    const { imageBase64: modelImage } = await callPipedreamApi<{ imageBase64: string }>('generate-model-image', {
+        cleanedImageBase64,
+        continuationCommand,
+        referenceImageBase64s,
     });
-  
-    const imagePart = response.candidates?.[0]?.content?.parts?.[0];
-    if (imagePart && imagePart.inlineData) {
-      return imagePart.inlineData.data;
-    }
-    
-    throw new Error('Falha ao gerar a imagem do modelo. A resposta da IA não continha uma imagem.');
+    return modelImage;
 };
 
 export const editImage = async (
@@ -232,36 +63,10 @@ export const editImage = async (
   maskBase64: string,
   prompt: string
 ): Promise<string> => {
-  const editPrompt = `${prompt}. Use a imagem de máscara fornecida para identificar a área a ser editada. A área marcada na máscara (preta) é o que precisa ser alterado ou preenchido. As áreas não marcadas (brancas) devem ser preservadas.`;
-
-  const response = await ai.models.generateContent({
-    model: imageModel,
-    contents: {
-      parts: [
-        { text: editPrompt },
-        {
-          inlineData: {
-            data: originalImageBase64,
-            mimeType: 'image/png',
-          },
-        },
-        {
-          inlineData: {
-            data: maskBase64,
-            mimeType: 'image/png',
-          },
-        },
-      ],
-    },
-    config: {
-      responseModalities: [Modality.IMAGE],
-    },
-  });
-
-  const imagePart = response.candidates?.[0]?.content?.parts?.[0];
-  if (imagePart && imagePart.inlineData) {
-    return imagePart.inlineData.data;
-  }
-
-  throw new Error('Falha ao editar a imagem. A resposta da IA não continha uma imagem.');
+    const { imageBase64: editedImage } = await callPipedreamApi<{ imageBase64: string }>('edit-image', {
+        originalImageBase64,
+        maskBase64,
+        prompt,
+    });
+    return editedImage;
 };

@@ -13,6 +13,17 @@
       body {
         font-family: 'Inter', sans-serif;
       }
+      .add-to-look-btn.added {
+        background-color: #16a34a; /* green-600 */
+        color: white;
+      }
+       .add-to-look-btn.added:hover {
+        background-color: #15803d; /* green-700 */
+      }
+      .add-to-look-btn:disabled {
+        background-color: #d1d5db; /* gray-300 */
+        cursor: not-allowed;
+      }
     </style>
   <script type="importmap">
 {
@@ -20,12 +31,63 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "@shopify/app-bridge-react": "https://aistudiocdn.com/@shopify/app-bridge-react@^4.0.0"
   }
 }
 </script>
 </head>
   <body class="bg-gray-50 text-gray-800">
+
+    <!--
+      PARA TESTAR A MUDANÇA:
+      Depois de atualizar os arquivos, ADICIONE ISTO NO FINAL DA URL DO SEU NAVEGADOR E APERTE ENTER:
+      ?shop=lui-bambini.myshopify.com&host=d3d3Lmx1aS1iYW1iaW5pLmNvbS9hZG1pbg
+    -->
+
+    <div class="p-8">
+      <h2 class="text-2xl font-bold text-center text-gray-700 mb-2">Simulação da Loja Shopify</h2>
+      <p class="text-center text-gray-500 mb-6">Clique nos botões abaixo para montar seu look.</p>
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-600 border-b pb-2 mb-4">Blusas</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Produto 1: Top -->
+                <div class="bg-white p-4 rounded-lg shadow border flex flex-col">
+                    <img src="https://i.ibb.co/L9L7Pz2/top.jpg" alt="Produto 1: Blusa Vermelha" class="w-full h-auto object-cover rounded-md mb-4"/>
+                    <h3 class="font-semibold mt-2">Blusa Vermelha com Laços</h3>
+                    <button class="add-to-look-btn mt-auto w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all" data-product-id="p1-top" data-product-type="top" data-product-image="https://i.ibb.co/L9L7Pz2/top.jpg" data-product-title="Blusa Vermelha com Laços">Adicionar ao Look</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-600 border-b pb-2 mb-4">Calças & Shorts</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                 <!-- Produto 2: Bottom -->
+                <div class="bg-white p-4 rounded-lg shadow border flex flex-col">
+                    <img src="https://i.ibb.co/YyB25jJ/bottom.jpg" alt="Produto 2: Short Jeans" class="w-full h-auto object-cover rounded-md mb-4"/>
+                    <h3 class="font-semibold mt-2">Short Jeans Claro</h3>
+                    <button class="add-to-look-btn mt-auto w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all" data-product-id="p2-bottom" data-product-type="bottom" data-product-image="https://i.ibb.co/YyB25jJ/bottom.jpg" data-product-title="Short Jeans Claro">Adicionar ao Look</button>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h3 class="text-lg font-semibold text-gray-600 border-b pb-2 mb-4">Calçados</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Produto 3: Shoes -->
+                <div class="bg-white p-4 rounded-lg shadow border flex flex-col">
+                    <img src="https://i.ibb.co/BCf7y2Q/shoes.jpg" alt="Produto 3: Tênis Infantil" class="w-full h-auto object-cover rounded-md mb-4"/>
+                    <h3 class="font-semibold mt-2">Tênis Infantil Dourado</h3>
+                    <button class="add-to-look-btn mt-auto w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all" data-product-id="p3-shoes" data-product-type="shoes" data-product-image="https://i.ibb.co/BCf7y2Q/shoes.jpg" data-product-title="Tênis Infantil Dourado">Adicionar ao Look</button>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -59,3 +59,10 @@ export interface GenerationOptions {
   theme: Theme;
   background?: Background | '';
 }
+
+export interface ClothingImagesState {
+  top: string | null;
+  bottom: string | null;
+  shoes: string | null;
+  combined: string | null;
+}

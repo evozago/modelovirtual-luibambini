@@ -1,23 +1,33 @@
-import React, { useState, useCallback } from 'react';
-import { ImageUploader } from './components/ImageUploader';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import { ProcessingView } from './components/ProcessingView';
 import { ResultsCard } from './components/ResultsCard';
 import { LogoIcon, GithubIcon } from './components/Icons';
 import { processImage, generateDescription, generateModelImage, editImage } from './services/geminiService';
-import { combineImages, fileToBase64 } from './utils/fileUtils';
-import type { ProcessingState, ProductOutput, GenerationOptions } from './types';
+import { combineImages, urlToDataUrl } from './utils/fileUtils';
+import type { ProcessingState, ProductOutput, GenerationOptions, ClothingImagesState } from './types';
 import { ProcessingStep, Gender, Age, Theme, PieceCount } from './types';
 import { GenerationOptionsForm } from './components/GenerationOptionsForm';
 import { ImageEditor } from './components/ImageEditor';
+import { usePersistentState } from './hooks/usePersistentState';
+import { LookBuilderPanel } from './components/LookBuilderPanel';
+import { LookBuilderHub } from './components/LookBuilderHub';
+import { Modal } from './components/Modal';
+import { useAppBridge } from '@shopify/app-bridge-react';
 
 
 export default function App() {
-  const [uploadMode, setUploadMode] = useState<'separate' | 'combined'>('separate');
-  const [clothingImages, setClothingImages] = useState<{ top: File | null; bottom: File | null; shoes: File | null; combined: File | null }>({ top: null, bottom: null, shoes: null, combined: null });
+  const [uploadMode, setUploadMode] = usePersistentState<'separate' | 'combined'>('lui-bambini-upload-mode', 'separate');
+  const [clothingImages, setClothingImages] = usePersistentState<ClothingImagesState>('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
+
   const [processingState, setProcessingState] = useState<ProcessingState>({ step: ProcessingStep.IDLE });
   const [productOutput, setProductOutput] = useState<ProductOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  
+  const appBridge = useAppBridge();
+
   const [generationOptions, setGenerationOptions] = useState<Omit<GenerationOptions, 'pieceCount'>>({
     gender: Gender.FEMALE,
     age: Age.FOUR_TO_EIGHT,
@@ -25,44 +35,41 @@ export default function App() {
     background: '',
   });
 
-  const handleImageUpload = (part: 'top' | 'bottom' | 'shoes' | 'combined', file: File) => {
-    setClothingImages(prev => ({ ...prev, [part]: file }));
+  const handleImageUpload = async (part: keyof ClothingImagesState, file: File) => {
+    const dataUrl = await urlToDataUrl(URL.createObjectURL(file));
+    setClothingImages(prev => ({ ...prev, [part]: dataUrl }));
     setProductOutput(null);
     setError(null);
     setProcessingState({ step: ProcessingStep.IDLE });
     setIsEditing(false);
   };
 
-  const handleReset = () => {
-    setClothingImages({ top: null, bottom: null, shoes: null, combined: null });
-    setProductOutput(null);
-    setError(null);
-    setProcessingState({ step: ProcessingStep.IDLE });
-    setIsEditing(false);
+  const handleRemoveImage = (part: keyof ClothingImagesState) => {
+    setClothingImages(prev => ({...prev, [part]: null}));
   };
-  
+
   const handleProcessImage = useCallback(async () => {
-    let filesToProcess: File[] = [];
+    let imagesToProcess: string[] = [];
     if (uploadMode === 'separate') {
         if (!clothingImages.top || !clothingImages.bottom) return;
-        filesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter((f): f is File => f !== null);
+        imagesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter((img): img is string => img !== null);
     } else { // 'combined' mode
         if (!clothingImages.combined) return;
-        filesToProcess = [clothingImages.combined, clothingImages.shoes].filter((f): f is File => f !== null);
+        imagesToProcess = [clothingImages.combined, clothingImages.shoes].filter((img): img is string => img !== null);
     }
     
-    if (filesToProcess.length === 0) return;
+    if (imagesToProcess.length === 0) return;
 
     setError(null);
     setProductOutput(null);
 
     try {
       setProcessingState({ step: ProcessingStep.CLEANING });
-      const referenceImageBase64s = await Promise.all(
-        filesToProcess.map(file => fileToBase64(file))
-      );
+      const referenceImageBase64s = imagesToProcess.map(dataUrl => dataUrl.split(',')[1]);
       
-      const { combinedImageBase64, mimeType } = await combineImages(...filesToProcess);
+      const { combinedImageBase64, mimeType } = await combineImages(...imagesToProcess);
+      
+      setProcessingState({ step: ProcessingStep.CLEANING });
       const cleanedImageBase64 = await processImage(combinedImageBase64, mimeType, PieceCount.SET);
 
       setProcessingState({ step: ProcessingStep.GENERATING_TEXT });
@@ -118,9 +125,21 @@ export default function App() {
 
   const renderContent = () => {
     const isProcessing = ![ProcessingStep.IDLE, ProcessingStep.DONE, ProcessingStep.ERROR].includes(processingState.step);
-
+    const hasAnyImage = Object.values(clothingImages).some(img => img !== null);
     const containerClasses = "bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 flex flex-col h-full";
 
+    if (!hasAnyImage) {
+      return (
+        <div className={containerClasses}>
+            <div className="flex flex-col items-center justify-center text-center h-full">
+                <div className="flex justify-center mb-4"><LogoIcon /></div>
+                <h2 className="text-xl font-semibold text-gray-800">Seu Montador de Looks está Vazio</h2>
+                <p className="text-gray-600 mt-2 max-w-sm">Navegue pela loja e clique em "Adicionar ao Look" nos produtos, ou faça o upload das suas próprias imagens aqui para começar.</p>
+            </div>
+        </div>
+      );
+    }
+    
     if (isProcessing) {
       return <div className={containerClasses}><ProcessingView state={processingState} /></div>;
     }
@@ -128,7 +147,7 @@ export default function App() {
       return <div className={containerClasses}><ImageEditor image={productOutput.modelImage} onCancel={() => setIsEditing(false)} onSubmit={handleEditImage} /></div>;
     }
     if (productOutput) {
-      return <ResultsCard output={productOutput} onReset={handleReset} onStartEdit={() => setIsEditing(true)} />;
+      return <ResultsCard output={productOutput} onReset={() => setProductOutput(null)} onStartEdit={() => setIsEditing(true)} />;
     }
     
     let isButtonDisabled = true;
@@ -155,128 +174,37 @@ export default function App() {
             >
               Criar Look com IA
             </button>
-            <button onClick={handleReset} className="mt-4 text-sm text-gray-500 hover:text-gray-700 w-full">
-              Escolher outras imagens
-            </button>
         </div>
       </div>
     );
   }
   
-  const hasAnyImage = clothingImages.top || clothingImages.bottom || clothingImages.shoes || clothingImages.combined;
-
-  const renderSeparatePreviews = () => (
-    <>
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Superior</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
-          {clothingImages.top ? (
-            <img src={URL.createObjectURL(clothingImages.top)} alt="Parte Superior" className="rounded-lg max-w-full max-h-full object-contain"/>
-          ) : (
-            <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('top', file)} /></div>
-          )}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Inferior</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
-          {clothingImages.bottom ? (
-            <img src={URL.createObjectURL(clothingImages.bottom)} alt="Parte Inferior" className="rounded-lg max-w-full max-h-full object-contain"/>
-          ) : (
-            <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('bottom', file)} /></div>
-          )}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
-          {clothingImages.shoes ? (
-            <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
-          ) : (
-            <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} /></div>
-          )}
-        </div>
-      </div>
-    </>
-  );
-
-  const renderCombinedPreviews = () => (
-    <>
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Look Completo</h2>
-        <div className="w-full h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
-          {clothingImages.combined ? (
-            <img src={URL.createObjectURL(clothingImages.combined)} alt="Look Completo" className="rounded-lg max-w-full max-h-full object-contain"/>
-          ) : (
-            <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} /></div>
-          )}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
-        <div className="w-full h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
-          {clothingImages.shoes ? (
-            <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
-          ) : (
-            <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} /></div>
-          )}
-        </div>
-      </div>
-    </>
-  );
-
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4 sm:p-6 lg:p-8">
-      <main className="w-full max-w-7xl mx-auto flex flex-col items-center flex-grow">
-        <header className="text-center mb-8">
-          <div className="flex justify-center items-center gap-3 mb-2">
-            <LogoIcon />
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Lui Bambini iA Editor</h1>
+    <div className="min-h-screen bg-transparent flex flex-col items-center">
+       {appBridge && (
+          <div className="fixed top-2 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full shadow z-50">
+            Conectado à loja Shopify...
           </div>
-          <p className="text-lg text-gray-600">
-           Crie looks incríveis combinando peças para gerar modelos com IA.
-          </p>
-        </header>
+        )}
+      <LookBuilderHub onClick={() => setIsEditorOpen(true)} />
+      
+      <Modal isOpen={isEditorOpen} onClose={() => setIsEditorOpen(false)} title="Montador de Looks com IA">
+        <main className="w-full flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <LookBuilderPanel 
+              uploadMode={uploadMode}
+              setUploadMode={setUploadMode}
+              clothingImages={clothingImages}
+              onImageUpload={handleImageUpload}
+              onRemoveImage={handleRemoveImage}
+          />
+          <div className="w-full flex flex-col h-full">
+              {renderContent()}
+              {error && <div className="mt-4 text-center text-red-600 bg-red-100 p-3 rounded-lg">{error}</div>}
+          </div>
+        </main>
+      </Modal>
 
-        <div className="w-full flex-grow">
-          {!hasAnyImage ? (
-            <div className="w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <div className="flex justify-center mb-6 border-b border-gray-200">
-                  <button onClick={() => setUploadMode('separate')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'separate' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
-                    Peças Separadas
-                  </button>
-                  <button onClick={() => setUploadMode('combined')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'combined' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
-                    Foto Única do Look
-                  </button>
-                </div>
-                {uploadMode === 'separate' ? (
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Parte Superior</h2><ImageUploader onImageUpload={(file) => handleImageUpload('top', file)} /></div>
-                      <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Parte Inferior</h2><ImageUploader onImageUpload={(file) => handleImageUpload('bottom', file)} /></div>
-                      <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Calçado (Opcional)</h2><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} /></div>
-                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Look Completo</h2><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} /></div>
-                    <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Calçado (Opcional)</h2><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} /></div>
-                  </div>
-                )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              <div className="w-full flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 gap-y-6">
-                {uploadMode === 'separate' ? renderSeparatePreviews() : renderCombinedPreviews()}
-              </div>
-
-              <div className="w-full flex flex-col h-full">
-                 {renderContent()}
-                 {error && <div className="mt-4 text-center text-red-600 bg-red-100 p-3 rounded-lg">{error}</div>}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-      <footer className="w-full max-w-7xl mx-auto text-center text-gray-500 text-sm mt-8">
+      <footer className="w-full max-w-7xl mx-auto text-center text-gray-500 text-sm mt-8 pb-8">
         <div className="flex flex-col items-center gap-2">
             <a href="https://github.com/google/genai-js" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-indigo-600 transition-colors">
                 <GithubIcon />

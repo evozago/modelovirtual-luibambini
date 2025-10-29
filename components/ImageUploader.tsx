@@ -4,9 +4,10 @@ import { UploadIcon } from './Icons';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => void;
+  className?: string;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, className }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +51,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) =
       onDragLeave={handleDragOut}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className={`relative flex flex-col items-center justify-center w-full h-80 border-2 border-dashed rounded-lg transition-colors duration-200 ${
+      className={`relative flex flex-col items-center justify-center w-full h-full border-2 border-dashed rounded-lg transition-colors duration-200 ${
         isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 bg-gray-50'
-      }`}
+      } ${className}`}
     >
       <div className="text-center p-8">
         <div className="flex justify-center mb-4">
