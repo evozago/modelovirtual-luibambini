@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -81,8 +80,14 @@ function updateButtonsState() {
   });
 }
 
-function handleButtonClick(event: MouseEvent) {
-  const button = event.currentTarget as HTMLButtonElement;
+function handleDelegatedButtonClick(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  const button = target.closest<HTMLButtonElement>('.add-to-look-btn');
+
+  if (!button) {
+    return;
+  }
+  
   const { productType, productImage } = button.dataset;
 
   if (!productType || !productImage) return;
@@ -112,11 +117,9 @@ function handleButtonClick(event: MouseEvent) {
 // --- Main script execution ---
 
 function initializeLookBuilder() {
-    const buttons = document.querySelectorAll('.add-to-look-btn');
-    buttons.forEach(button => {
-      button.addEventListener('click', handleButtonClick);
-    });
-
+    // Use event delegation on the body to handle clicks on buttons that might be added dynamically by the theme
+    document.body.addEventListener('click', handleDelegatedButtonClick);
+    
     // Listen for changes from the React app (e.g., user removes image in modal)
     window.addEventListener('storage', updateButtonsState);
 
@@ -124,5 +127,5 @@ function initializeLookBuilder() {
     updateButtonsState();
 }
 
-// Wait for the full page to load before trying to find the buttons
-document.addEventListener('DOMContentLoaded', initializeLookBuilder);
+// Since this is an ES module, it's deferred by default. The DOM will be ready when it runs.
+initializeLookBuilder();
