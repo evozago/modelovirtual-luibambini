@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ProcessingView } from './components/ProcessingView';
 import { ResultsCard } from './components/ResultsCard';
-import { LogoIcon, GithubIcon } from './components/Icons';
+import { LogoIcon } from './components/Icons';
 import { processImage, generateDescription, generateModelImage, editImage } from './services/geminiService';
-import { combineImages, urlToDataUrl } from './utils/fileUtils';
+import { combineImages } from './utils/fileUtils';
 import type { ProcessingState, ProductOutput, GenerationOptions, ClothingImagesState } from './types';
 import { ProcessingStep, Gender, Age, Theme, PieceCount } from './types';
 import { GenerationOptionsForm } from './components/GenerationOptionsForm';
@@ -12,11 +12,8 @@ import { usePersistentState } from './hooks/usePersistentState';
 import { LookBuilderPanel } from './components/LookBuilderPanel';
 import { LookBuilderHub } from './components/LookBuilderHub';
 import { Modal } from './components/Modal';
-// fix: The 'Provider' component from '@shopify/app-bridge-react' was renamed to 'AppProvider'.
-import { AppProvider as AppBridgeProvider } from '@shopify/app-bridge-react';
 
-// A lógica do nosso App continua a mesma
-const AppContent = () => {
+export default function App() {
   const [uploadMode, setUploadMode] = usePersistentState<'separate' | 'combined'>('lui-bambini-upload-mode', 'separate');
   const [clothingImages, setClothingImages] = usePersistentState<ClothingImagesState>('lui-bambini-look-builder', { top: null, bottom: null, shoes: null, combined: null });
 
@@ -33,10 +30,15 @@ const AppContent = () => {
     background: '',
   });
 
-  // ... (todas as suas funções handle... permanecem as mesmas) ...
     const handleImageUpload = async (part: keyof ClothingImagesState, file: File) => {
-        const dataUrl = await urlToDataUrl(URL.createObjectURL(file));
-        setClothingImages(prev => ({ ...prev, [part]: dataUrl }));
+        const dataUrl = URL.createObjectURL(file);
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+            setClothingImages(prev => ({ ...prev, [part]: reader.result as string }));
+        };
         setProductOutput(null);
         setError(null);
         setProcessingState({ step: ProcessingStep.IDLE });
@@ -52,7 +54,7 @@ const AppContent = () => {
         if (uploadMode === 'separate') {
             if (!clothingImages.top || !clothingImages.bottom) return;
             imagesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter((img): img is string => img !== null);
-        } else { // 'combined' mode
+        } else {
             if (!clothingImages.combined) return;
             imagesToProcess = [clothingImages.combined, clothingImages.shoes].filter((img): img is string => img !== null);
         }
@@ -63,7 +65,6 @@ const AppContent = () => {
         setProductOutput(null);
 
         try {
-        setProcessingState({ step: ProcessingStep.CLEANING });
         const { combinedImageBase64, mimeType } = await combineImages(...imagesToProcess);
         
         setProcessingState({ step: ProcessingStep.CLEANING });
@@ -87,9 +88,9 @@ const AppContent = () => {
             continuationCommand: command,
         });
         setProcessingState({ step: ProcessingStep.DONE });
-        } catch (err) {
+        } catch (err: any) {
         console.error(err);
-        setError('Ocorreu um erro ao processar as imagens. Por favor, tente novamente.');
+        setError(err.message || 'Ocorreu um erro ao processar as imagens.');
         setProcessingState({ step: ProcessingStep.ERROR });
         }
     }, [clothingImages, generationOptions, uploadMode]);
@@ -113,9 +114,9 @@ const AppContent = () => {
             }) : null);
             
             setProcessingState({ step: ProcessingStep.DONE });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            setError('Ocorreu um erro ao editar a imagem. Por favor, tente novamente.');
+            setError(err.message || 'Ocorreu um erro ao editar a imagem.');
             setProcessingState({ step: ProcessingStep.ERROR });
         }
     }, [productOutput]);
@@ -131,7 +132,7 @@ const AppContent = () => {
                 <div className="flex flex-col items-center justify-center text-center h-full">
                     <div className="flex justify-center mb-4"><LogoIcon /></div>
                     <h2 className="text-xl font-semibold text-gray-800">Seu Montador de Looks está Vazio</h2>
-                    <p className="text-gray-600 mt-2 max-w-sm">Navegue pela loja e clique em "Adicionar ao Look" nos produtos, ou faça o upload das suas próprias imagens aqui para começar.</p>
+                    <p className="text-gray-600 mt-2 max-w-sm">Navegue pela loja e clique em "Adicionar ao Look" nos produtos para começar.</p>
                 </div>
             </div>
         );
@@ -195,35 +196,5 @@ const AppContent = () => {
             </main>
         </Modal>
         </>
-    );
-}
-
-// Este é o componente principal que será renderizado.
-// Ele configura a "ponte de comunicação" com a Shopify.
-export default function App() {
-    const [appBridgeConfig, setAppBridgeConfig] = useState(null);
-
-    useEffect(() => {
-        const host = new URL(location.toString()).searchParams.get("host");
-        if (host) {
-            // @ts-ignore
-            setAppBridgeConfig({
-                host,
-                apiKey: process.env.SHOPIFY_API_KEY, // This is managed by Shopify CLI
-                forceRedirect: true,
-            });
-        }
-    }, []);
-
-    if (!appBridgeConfig) {
-        // Se não estiver dentro do Shopify, mostre uma mensagem ou o app normal.
-        // Para simplicidade, vamos apenas mostrar o conteúdo do app.
-        return <AppContent />;
-    }
-
-    return (
-        <AppBridgeProvider config={appBridgeConfig}>
-            <AppContent />
-        </AppBridgeProvider>
     );
 }
