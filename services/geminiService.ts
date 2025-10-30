@@ -2,10 +2,11 @@ import { GoogleGenAI, Modality, Type } from '@google/genai';
 import type { GenerationOptions } from '../types';
 import { Age, Gender, PieceCount } from '../types';
 
-const API_KEY = process.env.API_KEY;
+// Lê a chave da API do ambiente Vite (import.meta.env)
+const API_KEY = import.meta.env.AIzaSyC7YxIUyNq8OCnH1iE-grmZ8cJLQWm_li4;
 
 if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set.");
+  throw new Error("VITE_GEMINI_API_KEY environment variable not set. Please add it to your .env.development file for local testing.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });

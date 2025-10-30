@@ -152,13 +152,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ image, onSubmit, onCan
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ex: adicione um laço de fita no cabelo"
-            className="w-full p-2 border border-gray-300 rounded-md mb-4 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full p-2 border border-gray-300 rounded-md mb-4 focus:ring-pink-500 focus:border-pink-500"
             rows={2}
         />
         <button
             onClick={handleSubmit}
             disabled={!prompt.trim()}
-            className="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
             Corrigir Imagem com IA
         </button>

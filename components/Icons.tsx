@@ -2,12 +2,25 @@
 import React from 'react';
 
 export const LogoIcon: React.FC = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M2 17L12 22L22 17" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M2 12L12 17L22 12" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="40" height="40" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Lui Bambini Logo">
+      {/* Hat base */}
+      <path d="M35 50 C 35 30, 85 30, 85 50 L 92 58 L 28 58 Z" fill="#937868" />
+      {/* Hat top flap */}
+      <path d="M50 32 C 40 28, 80 28, 70 32" stroke="#755E50" strokeWidth="4" strokeLinecap="round" />
+      {/* Goggles */}
+      <path d="M28 54 H 92" stroke="#A1887F" strokeWidth="6" strokeLinecap="round" />
+      <circle cx="48" cy="48" r="12" fill="#E0E0E0" stroke="#795548" strokeWidth="3" />
+      <circle cx="72" cy="48" r="12" fill="#E0E0E0" stroke="#795548" strokeWidth="3" />
+      {/* Body */}
+      <path d="M25 70 C 20 110, 100 110, 95 70 C 95 50, 75 50, 60 55 C 45 50, 25 50, 25 70 Z" fill="#546E7A" />
+      {/* Belly */}
+      <path d="M38 75 C 35 100, 85 100, 82 75 C 82 65, 70 65, 60 70 C 50 65, 38 65, 38 75 Z" fill="white" />
+      {/* Eyes (curved lines for happy expression) */}
+      <path d="M50 78 C 53 74, 57 74, 60 78" stroke="#455A64" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <path d="M60 78 C 63 74, 67 74, 70 78" stroke="#455A64" strokeWidth="3" strokeLinecap="round" fill="none" />
   </svg>
 );
+
 
 export const UploadIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -35,7 +48,7 @@ export const PersonIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 export const CopyIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5 .124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
     </svg>
 );
 
@@ -65,7 +78,7 @@ export const DownloadIcon: React.FC<{ className?: string }> = ({ className }) =>
 
 export const BrushIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.75a2.25 2.25 0 01-2.25-2.25v-6.5a2.25 2.25 0 012.25-2.25h14.5a2.25 2.25 0 012.25 2.25v6.5a2.25 2.25 0 01-2.25 2.25H16.5m-9-3.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.75a2.25 2.25 0 01-2.25-2.25v-6.5a2.25 2.25 0 012.25-2.25h14.5a2.25 2.25 0 012.25 2.25v6.5a2.25 2.25 0 01-2.25-2.25H16.5m-9-3.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v.75a2.25 2.25 0 002.25 2.25h13.5a2.25 2.25 0 002.25-2.25v-.75" />
     </svg>
 );

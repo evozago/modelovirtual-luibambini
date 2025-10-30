@@ -24,7 +24,7 @@ const CopyButton: React.FC<{ textToCopy: string }> = ({ textToCopy }) => {
             className="p-1.5 bg-gray-200 text-gray-600 rounded-md hover:bg-gray-300 hover:text-gray-900 transition-all"
             aria-label="Copiar para área de transferência"
         >
-            {copied ? <CheckIcon className="w-4 h-4 text-indigo-600" /> : <CopyIcon className="w-4 h-4" />}
+            {copied ? <CheckIcon className="w-4 h-4 text-pink-600" /> : <CopyIcon className="w-4 h-4" />}
         </button>
     );
 };
@@ -47,7 +47,7 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
           <h2 className="text-xl font-semibold text-gray-700">Resultado Gerado pela IA</h2>
             <button
                 onClick={onReset}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-pink-600 font-medium transition-colors"
                 title="Começar de Novo"
             >
                 <RefreshIcon className="w-4 h-4"/>
@@ -70,7 +70,7 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
         <div className="grid grid-cols-2 gap-4 mb-6">
             <button
                 onClick={handleDownload}
-                className="flex items-center justify-center gap-2 text-sm bg-indigo-600 text-white font-semibold py-3 px-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                className="flex items-center justify-center gap-2 text-sm bg-pink-600 text-white font-semibold py-3 px-3 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-200"
             >
                 <DownloadIcon className="w-5 h-5"/>
                 Baixar Imagem

@@ -115,8 +115,20 @@ export default async function handler(req, res) {
     res.status(200).json(products);
 
   } catch (error) {
+        const statusCode = error.response?.status;
     const errorDetails = error.response ? error.response.data : error.message;
-    console.error('Erro ao fazer proxy para a API Admin do Shopify:', errorDetails);
-    res.status(502).json({ message: 'Falha ao buscar dados do Shopify.', details: errorDetails });
+    let publicMessage = 'Falha ao buscar dados do Shopify.';
+    if (statusCode === 401 || statusCode === 403) {
+      publicMessage = 'A API Admin do Shopify rejeitou a requisição. Verifique se o token Admin está correto, se a loja está certa e se o app tem permissão para ler produtos.';
+    }
+
+    console.error('Erro ao fazer proxy para a API Admin do Shopify:', {
+      status: statusCode,
+      details: errorDetails,
+    });
+
+    res
+      .status(statusCode ?? 502)
+      .json({ message: publicMessage, details: errorDetails });
   }
 }

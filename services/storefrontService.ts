@@ -13,6 +13,11 @@ export interface StoreProduct {
   barcode: string | null;
 }
 
+// Obtém a URL base da API a partir das variáveis de ambiente.
+// Em desenvolvimento, será 'modelovirtual-luibambini.vercel.app'.
+// Em produção, será uma string vazia, resultando em uma chamada relativa '/api/shopify-proxy'.
+const API_BASE_URL = import.meta.env.modelovirtual-luibambini.vercel.app || '';
+
 /**
  * Busca produtos fazendo uma requisição à nossa Vercel Serverless Function, que atua como um proxy seguro para a API Admin do Shopify.
  * @param query A string de busca para filtrar produtos por SKU, código de barras ou título.
@@ -22,8 +27,9 @@ export const searchProducts = async (query: string): Promise<StoreProduct[]> => 
   console.log(`Buscando por: "${query}" através da função serverless.`);
 
   try {
-    // A URL aponta para a nossa função na pasta /api. A Vercel gerencia isso automaticamente.
-    const response = await fetch(`/api/shopify-proxy?search=${encodeURIComponent(query)}`);
+    // Constrói a URL completa para a API.
+    const apiUrl = `${API_BASE_URL}/api/shopify-proxy?search=${encodeURIComponent(query)}`;
+    const response = await fetch(apiUrl);
 
     if (!response.ok) {
       let errorMessage = `Erro na comunicação com o servidor: ${response.status} ${response.statusText}`;

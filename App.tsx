@@ -179,7 +179,7 @@ export default function App() {
             <button
               onClick={handleProcessImage}
               disabled={isButtonDisabled}
-              className="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:scale-100"
+              className="w-full bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-300 ease-in-out transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:scale-100"
             >
               Criar Look com IA
             </button>
@@ -259,7 +259,9 @@ export default function App() {
         <header className="text-center mb-8">
           <div className="flex justify-center items-center gap-3 mb-2">
             <LogoIcon />
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Lui Bambini iA Editor</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
+              <span style={{ color: '#54c5c1' }}>Lui</span> <span style={{ color: '#e8a1b3' }}>Bambini</span> iA Editor
+            </h1>
           </div>
           <p className="text-lg text-gray-600">
            Crie looks incríveis combinando peças para gerar modelos com IA.
@@ -270,10 +272,10 @@ export default function App() {
           {!hasAnyImage ? (
             <div className="w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
                 <div className="flex justify-center mb-6 border-b border-gray-200">
-                  <button onClick={() => setUploadMode('separate')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'separate' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <button onClick={() => setUploadMode('separate')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'separate' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-gray-700'}`}>
                     Peças Separadas
                   </button>
-                  <button onClick={() => setUploadMode('combined')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'combined' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <button onClick={() => setUploadMode('combined')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'combined' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-gray-700'}`}>
                     Foto Única do Look
                   </button>
                 </div>
@@ -306,7 +308,7 @@ export default function App() {
       </main>
       <footer className="w-full max-w-7xl mx-auto text-center text-gray-500 text-sm mt-8">
         <div className="flex flex-col items-center gap-2">
-            <a href="https://github.com/google/genai-js" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-indigo-600 transition-colors">
+            <a href="https://github.com/google/genai-js" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-pink-600 transition-colors">
                 <GithubIcon />
             </a>
             <p>Copyright © 2025 - Lui Bambini Todos direitos Reservados</p>

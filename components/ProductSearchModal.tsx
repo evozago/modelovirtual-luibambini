@@ -11,7 +11,7 @@ interface ProductSearchModalProps {
 const ProductCard: React.FC<{ product: StoreProduct; onSelect: (url: string) => void }> = ({ product, onSelect }) => (
   <button
     onClick={() => onSelect(product.imageUrl)}
-    className="block group w-full text-left bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all duration-200 flex flex-col"
+    className="block group w-full text-left bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-pink-400 hover:shadow-md transition-all duration-200 flex flex-col"
   >
     <div className="w-full h-48 bg-white overflow-hidden">
       <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -84,12 +84,12 @@ export const ProductSearchModal: React.FC<ProductSearchModalProps> = ({ onImageS
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Digite o nome do produto..."
-              className="flex-grow w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-grow w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
+              className="px-6 py-2 bg-pink-600 text-white font-semibold rounded-md hover:bg-pink-700 disabled:bg-gray-400"
             >
               {isLoading ? 'Buscando...' : 'Buscar'}
             </button>
