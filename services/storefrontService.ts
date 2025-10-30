@@ -26,8 +26,21 @@ export const searchProducts = async (query: string): Promise<StoreProduct[]> => 
     const response = await fetch(`/api/shopify-proxy?search=${encodeURIComponent(query)}`);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `Erro na função serverless: ${response.statusText}`);
+      let errorMessage = `Erro na comunicação com o servidor: ${response.status} ${response.statusText}`;
+      try {
+        const errorBody = await response.text();
+        // Tenta interpretar como JSON, mas não falha se não for
+        try {
+          const errorJson = JSON.parse(errorBody);
+          errorMessage = errorJson.message || `Erro do servidor: ${JSON.stringify(errorJson)}`;
+        } catch (e) {
+          // Se não for JSON, é provável que seja um erro de infraestrutura (ex: HTML de erro da Vercel)
+          errorMessage = `O servidor retornou uma resposta inesperada. Verifique os logs da função na Vercel. Resposta: ${errorBody.substring(0, 300)}...`;
+        }
+      } catch (e) {
+        // Ignora se não conseguir ler o corpo do erro
+      }
+      throw new Error(errorMessage);
     }
 
     const products: StoreProduct[] = await response.json();
@@ -35,6 +48,8 @@ export const searchProducts = async (query: string): Promise<StoreProduct[]> => 
 
   } catch (error) {
     console.error('Falha ao conectar com a função serverless:', error);
-    throw new Error('Não foi possível carregar os produtos. Verifique a configuração na Vercel.');
+    // Propaga a mensagem de erro detalhada que criamos acima, ou uma genérica.
+    const message = error instanceof Error ? error.message : 'Não foi possível carregar os produtos. Verifique a configuração na Vercel.';
+    throw new Error(message);
   }
 };

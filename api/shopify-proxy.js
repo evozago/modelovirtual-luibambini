@@ -1,6 +1,5 @@
-// Importa o 'axios' que é necessário para fazer a requisição HTTP.
-// Você precisará adicionar 'axios' às dependências do seu projeto: npm install axios
-const axios = require('axios');
+// Usa a sintaxe de import do ES Modules, pois o projeto está configurado com "type": "module" no package.json.
+import axios from 'axios';
 
 // Esta é a função principal que a Vercel executará.
 export default async function handler(req, res) {
