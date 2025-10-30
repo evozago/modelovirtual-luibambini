@@ -9,12 +9,6 @@ export const LogoIcon: React.FC = () => (
   </svg>
 );
 
-export const LookBuilderIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A3.375 3.375 0 006.375 8.25v2.25c0 .934.364 1.823.997 2.475L12 18l4.628-4.95a3.375 3.375 0 00.997-2.475v-2.25A3.375 3.375 0 0012 4.875z" />
-    </svg>
-);
-
 export const UploadIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -71,7 +65,7 @@ export const DownloadIcon: React.FC<{ className?: string }> = ({ className }) =>
 
 export const BrushIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.75a2.25 2.25 0 01-2.25-2.25v-6.5a2.25 2.25 0 012.25-2.25h14.5a2.25 2.25 0 012.25 2.25v6.5a2.25 2.25 0 01-2.25-2.25H16.5m-9-3.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.75a2.25 2.25 0 01-2.25-2.25v-6.5a2.25 2.25 0 012.25-2.25h14.5a2.25 2.25 0 012.25 2.25v6.5a2.25 2.25 0 01-2.25 2.25H16.5m-9-3.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v.75a2.25 2.25 0 002.25 2.25h13.5a2.25 2.25 0 002.25-2.25v-.75" />
     </svg>
 );

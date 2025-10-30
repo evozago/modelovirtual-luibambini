@@ -1,4 +1,3 @@
-
 export const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -11,53 +10,30 @@ export const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
-export const fileToDataUrl = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-  
-export const urlToDataUrl = async (url: string): Promise<string> => {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
-
-export const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
-    const res = await fetch(dataUrl);
-    return await res.blob();
-};
-
-
-export const combineImages = async (...dataUrls: string[]): Promise<{ combinedImageBase64: string, mimeType: string }> => {
+export const combineImages = async (...files: File[]): Promise<{ combinedImageBase64: string, mimeType: string }> => {
   return new Promise(async (resolve, reject) => {
-    if (dataUrls.length === 0) {
-      return reject(new Error('Nenhuma URL de dados fornecida para combinar.'));
+    if (files.length === 0) {
+      return reject(new Error('Nenhum arquivo fornecido para combinar.'));
     }
-    
-    const mimeType = dataUrls[0].match(/data:(.*);/)?.[1] || 'image/png';
 
     // If only one file, just convert it and return
-    if (dataUrls.length === 1) {
-        const base64 = dataUrls[0].split(',')[1];
-        return resolve({ combinedImageBase64: base64, mimeType });
+    if (files.length === 1) {
+      const file = files[0];
+      try {
+        const base64 = await fileToBase64(file);
+        return resolve({ combinedImageBase64: base64, mimeType: file.type });
+      } catch (error) {
+        return reject(error);
+      }
     }
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return reject(new Error('Não foi possível obter o contexto do canvas.'));
 
-    const images = dataUrls.map(url => {
+    const images = files.map(file => {
       const img = new Image();
-      img.src = url;
+      img.src = URL.createObjectURL(file);
       return img;
     });
 
@@ -82,9 +58,9 @@ export const combineImages = async (...dataUrls: string[]): Promise<{ combinedIm
             currentY += loadedImg.height + gap;
           });
           
-          const finalDataUrl = canvas.toDataURL('image/png');
+          const dataUrl = canvas.toDataURL('image/png');
           resolve({
-            combinedImageBase64: finalDataUrl.split(',')[1],
+            combinedImageBase64: dataUrl.split(',')[1],
             mimeType: 'image/png'
           });
         }
