@@ -40,7 +40,11 @@ export const ProductSearchModal: React.FC<ProductSearchModalProps> = ({ onImageS
       const products = await searchProducts(searchQuery);
       setResults(products);
     } catch (err) {
-      setError('Falha ao buscar produtos. Tente novamente.');
+      if (err instanceof Error && err.message.includes('Credenciais da API')) {
+        setError('Conexão com a loja não configurada. Peça ao administrador para configurar as credenciais do Shopify no servidor.');
+      } else {
+        setError('Falha ao buscar produtos. Verifique a conexão e tente novamente.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
