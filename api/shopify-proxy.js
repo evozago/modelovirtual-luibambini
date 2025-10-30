@@ -22,33 +22,29 @@ export default async function handler(req, res) {
   const shopifyAdminToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
   const shopifyShopName = process.env.SHOPIFY_SHOP_NAME;
 
-  // Se as credenciais não estiverem configuradas, retorna um erro.
+  // Se as credenciais não estiverem configuradas, retorna um erro claro.
   if (!shopifyAdminToken || !shopifyShopName) {
     return res.status(500).json({ message: 'Credenciais da API Admin do Shopify não configuradas nas variáveis de ambiente do servidor.' });
   }
 
-  // Pega o termo de busca da URL (ex: /api/shopify-proxy?search=12345)
-  const searchQuery = req.query.search || '';
+  // Pega o termo de busca da URL (ex: /api/shopify-proxy?search=12345) e remove espaços em branco.
+  const searchQuery = req.query.search?.trim() || '';
   const shopifyApiUrl = `https://${shopifyShopName}.myshopify.com/admin/api/2024-04/graphql.json`;
 
-  // A consulta GraphQL para buscar produtos por SKU, código de barras ou título.
-  const graphqlQuery = `
-    query searchProducts($queryString: String!) {
-      products(first: 20, query: $queryString) {
-        edges {
-          node {
-            id
-            title
-            featuredImage {
-              url
-            }
-            variants(first: 1) {
-              edges {
-                node {
-                  sku
-                  barcode
-                }
-              }
+  // Define a parte da consulta que seleciona os campos do produto, evitando repetição.
+  const productFieldsFragment = `
+    edges {
+      node {
+        id
+        title
+        featuredImage {
+          url(transform: {maxWidth: 250, maxHeight: 250})
+        }
+        variants(first: 1) {
+          edges {
+            node {
+              sku
+              barcode
             }
           }
         }
@@ -56,15 +52,39 @@ export default async function handler(req, res) {
     }
   `;
 
+  let graphqlQuery;
+  let variables;
+
+  if (searchQuery) {
+    // Se houver um termo de busca, constrói uma consulta para filtrar por SKU, código de barras ou título.
+    graphqlQuery = `
+      query searchProducts($queryString: String!) {
+        products(first: 20, query: $queryString) {
+          ${productFieldsFragment}
+        }
+      }
+    `;
+    variables = {
+      queryString: `(sku:${searchQuery} OR barcode:${searchQuery} OR title:*${searchQuery}*) AND published_status:active`,
+    };
+  } else {
+    // Se a busca estiver vazia, carrega os produtos mais recentes que estão publicados.
+    graphqlQuery = `
+      query getRecentProducts {
+        products(first: 20, sortKey: UPDATED_AT, reverse: true, query: "published_status:active") {
+          ${productFieldsFragment}
+        }
+      }
+    `;
+    variables = {};
+  }
+
   try {
     const response = await axios.post(
       shopifyApiUrl,
       {
         query: graphqlQuery,
-        variables: {
-          // Constrói a string de busca para procurar em múltiplos campos.
-          queryString: `sku:${searchQuery} OR barcode:${searchQuery} OR title:*${searchQuery}*`,
-        },
+        variables: variables,
       },
       {
         headers: {
@@ -95,7 +115,8 @@ export default async function handler(req, res) {
     res.status(200).json(products);
 
   } catch (error) {
-    console.error('Erro ao fazer proxy para a API Admin do Shopify:', error.response ? error.response.data : error.message);
-    res.status(502).json({ message: 'Falha ao buscar dados do Shopify.' });
+    const errorDetails = error.response ? error.response.data : error.message;
+    console.error('Erro ao fazer proxy para a API Admin do Shopify:', errorDetails);
+    res.status(502).json({ message: 'Falha ao buscar dados do Shopify.', details: errorDetails });
   }
 }
