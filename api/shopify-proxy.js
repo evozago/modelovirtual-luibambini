@@ -55,9 +55,20 @@ export default async function handler(req, res) {
 
   let graphqlQuery;
   let variables;
+  let fullQueryString;
 
   if (searchQuery) {
-    // Se houver um termo de busca, constrói uma consulta para filtrar por SKU, código de barras ou título.
+    // Lógica de busca aprimorada:
+    if (searchQuery.includes(' ')) {
+        // Se a busca contém espaços, é uma busca por múltiplas palavras no título.
+        const searchWords = searchQuery.split(' ').filter(word => word.length > 0);
+        const titleClauses = searchWords.map(word => `title:*${word}*`).join(' AND ');
+        fullQueryString = `(${titleClauses}) AND published_status:active`;
+    } else {
+        // Se for uma única palavra, pode ser SKU, código de barras ou um título de uma palavra.
+        fullQueryString = `(sku:${searchQuery} OR barcode:${searchQuery} OR title:*${searchQuery}*) AND published_status:active`;
+    }
+
     graphqlQuery = `
       query searchProducts($queryString: String!) {
         products(first: 20, query: $queryString) {
@@ -66,7 +77,7 @@ export default async function handler(req, res) {
       }
     `;
     variables = {
-      queryString: `(sku:${searchQuery} OR barcode:${searchQuery} OR title:*${searchQuery}*) AND published_status:active`,
+      queryString: fullQueryString,
     };
   } else {
     // Se a busca estiver vazia, carrega os produtos mais recentes que estão publicados.

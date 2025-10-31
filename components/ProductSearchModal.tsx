@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { searchProducts } from '../services/storefrontService';
 import type { StoreProduct } from '../services/storefrontService';
 import { XIcon } from './Icons';
@@ -27,11 +27,12 @@ const ProductCard: React.FC<{ product: StoreProduct; onSelect: (url: string) => 
 );
 
 
-export const ProductSearchModal: React.FC<ProductSearchModalProps> = ({ onImageSelect, onClose }) => {
+export const ProductSearchModal: React.FC<{ onImageSelect: (imageUrl: string) => void; onClose: () => void }> = ({ onImageSelect, onClose }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<StoreProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearch = async (searchQuery: string) => {
     setIsLoading(true);
@@ -50,16 +51,36 @@ export const ProductSearchModal: React.FC<ProductSearchModalProps> = ({ onImageS
       setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
-      // initial load
-      handleSearch('');
+    // Carregamento inicial de produtos recentes
+    handleSearch('');
   }, []);
 
-  const onSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSearch(query);
-  };
+  useEffect(() => {
+    // Limpa o timeout anterior sempre que a query muda
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    // Define um novo timeout para buscar após o usuário parar de digitar
+    debounceTimeout.current = setTimeout(() => {
+      // Evita buscar com a mesma query do carregamento inicial se o campo for limpo
+      if (query !== '') {
+        handleSearch(query);
+      } else if (results.length > 0 && query === '') {
+        // Se o usuário limpar o campo, recarrega os produtos recentes
+        handleSearch('');
+      }
+    }, 400); // 400ms de atraso
+
+    // Função de limpeza para remover o timeout se o componente for desmontado
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [query]); // Executa o efeito sempre que a 'query' mudar
 
   return (
     <div
@@ -77,24 +98,16 @@ export const ProductSearchModal: React.FC<ProductSearchModalProps> = ({ onImageS
           </button>
         </div>
         
-        <form onSubmit={onSearchSubmit} className="mb-4">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Digite o nome do produto..."
-              className="flex-grow w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-6 py-2 bg-pink-600 text-white font-semibold rounded-md hover:bg-pink-700 disabled:bg-gray-400"
-            >
-              {isLoading ? 'Buscando...' : 'Buscar'}
-            </button>
-          </div>
-        </form>
+        <div className="mb-4">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Digite o nome do produto..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+            autoFocus
+          />
+        </div>
 
         <div className="flex-grow overflow-y-auto -mr-3 pr-3">
           {isLoading ? (
