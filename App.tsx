@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { ProcessingView } from './components/ProcessingView';
 import { ResultsCard } from './components/ResultsCard';
-import { LogoIcon, GithubIcon } from './components/Icons';
+import { WebsiteIcon, InstagramIcon, WhatsAppIcon, MapPinIcon } from './components/Icons';
 import { processImage, generateDescription, generateModelImage, editImage } from './services/geminiService';
 import { combineImages, fileToBase64 } from './utils/fileUtils';
 import type { ProcessingState, ProductOutput, GenerationOptions } from './types';
@@ -197,7 +197,7 @@ export default function App() {
     <>
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Superior</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
+        <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.top ? (
             <img src={URL.createObjectURL(clothingImages.top)} alt="Parte Superior" className="rounded-lg max-w-full max-h-full object-contain"/>
           ) : (
@@ -207,7 +207,7 @@ export default function App() {
       </div>
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Inferior</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
+        <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.bottom ? (
             <img src={URL.createObjectURL(clothingImages.bottom)} alt="Parte Inferior" className="rounded-lg max-w-full max-h-full object-contain"/>
           ) : (
@@ -217,7 +217,7 @@ export default function App() {
       </div>
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
-        <div className="w-full h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
+        <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.shoes ? (
             <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
           ) : (
@@ -232,7 +232,7 @@ export default function App() {
     <>
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Look Completo</h2>
-        <div className="w-full h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
+        <div className="w-full h-64 sm:h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.combined ? (
             <img src={URL.createObjectURL(clothingImages.combined)} alt="Look Completo" className="rounded-lg max-w-full max-h-full object-contain"/>
           ) : (
@@ -242,7 +242,7 @@ export default function App() {
       </div>
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
-        <div className="w-full h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
+        <div className="w-full h-64 sm:h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.shoes ? (
             <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
           ) : (
@@ -258,7 +258,6 @@ export default function App() {
       <main className="w-full max-w-7xl mx-auto flex flex-col items-center flex-grow">
         <header className="text-center mb-8">
           <div className="flex justify-center items-center gap-3 mb-2">
-            <LogoIcon />
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
               <span style={{ color: '#54c5c1' }}>Lui</span> <span style={{ color: '#e8a1b3' }}>Bambini</span> iA Editor
             </h1>
@@ -280,13 +279,13 @@ export default function App() {
                   </button>
                 </div>
                 {uploadMode === 'separate' ? (
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
                       <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Parte Superior</h2><ImageUploader onImageUpload={(file) => handleImageUpload('top', file)} onOpenProductSearch={() => openProductSearch('top')} /></div>
                       <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Parte Inferior</h2><ImageUploader onImageUpload={(file) => handleImageUpload('bottom', file)} onOpenProductSearch={() => openProductSearch('bottom')} /></div>
                       <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Calçado (Opcional)</h2><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} onOpenProductSearch={() => openProductSearch('shoes')} /></div>
                    </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                     <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Look Completo</h2><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} onOpenProductSearch={() => openProductSearch('combined')} /></div>
                     <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Calçado (Opcional)</h2><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} onOpenProductSearch={() => openProductSearch('shoes')} /></div>
                   </div>
@@ -306,12 +305,38 @@ export default function App() {
           )}
         </div>
       </main>
-      <footer className="w-full max-w-7xl mx-auto text-center text-gray-500 text-sm mt-8">
-        <div className="flex flex-col items-center gap-2">
-            <a href="https://github.com/google/genai-js" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-pink-600 transition-colors">
-                <GithubIcon />
+      <footer className="w-full max-w-4xl mx-auto text-center text-gray-600 mt-12 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-10 md:gap-8 text-sm">
+          {/* Contact */}
+          <div className="flex flex-col items-center md:items-start gap-3">
+            <h3 className="font-semibold text-gray-800 uppercase tracking-wider">Contato</h3>
+            <a href="https://www.luibambini.com.br/pages/contact" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+                <WhatsAppIcon className="w-5 h-5" />
+                <span>Fale com uma consultora</span>
             </a>
-            <p>Copyright © 2025 - Lui Bambini Todos direitos Reservados</p>
+            <a href="https://www.instagram.com/luibambini" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+                <InstagramIcon className="w-5 h-5" />
+                <span>@luibambini</span>
+            </a>
+            <a href="https://www.luibambini.com.br" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+                <WebsiteIcon className="w-5 h-5" />
+                <span>www.luibambini.com.br</span>
+            </a>
+          </div>
+
+          {/* Address */}
+          <div className="flex flex-col items-center md:items-start gap-3 text-center md:text-left">
+            <h3 className="font-semibold text-gray-800 uppercase tracking-wider">Endereço</h3>
+            <a href="https://maps.app.goo.gl/HATW2qGmyaHwX9gYA" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors">
+              <div className="flex items-start gap-2">
+                  <MapPinIcon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span>Avenida T-9, 1986 - Jardim América<br />Goiânia - Goias</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div className="mt-10 pt-6 border-t border-gray-200 text-xs text-gray-500">
+            <p>Copyright © 2025 - Lui Bambini Todos os direitos Reservados</p>
         </div>
       </footer>
       {productSearchTarget && (

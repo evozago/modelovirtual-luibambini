@@ -50,7 +50,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, onO
       onDragLeave={handleDragOut}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className={`relative flex flex-col items-center justify-center w-full h-80 border-2 border-dashed rounded-lg transition-colors duration-200 ${
+      className={`relative flex flex-col items-center justify-center w-full h-64 sm:h-80 border-2 border-dashed rounded-lg transition-colors duration-200 ${
         isDragging ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50'
       }`}
     >

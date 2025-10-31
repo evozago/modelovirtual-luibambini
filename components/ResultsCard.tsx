@@ -56,7 +56,7 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
         </div>
 
         {/* Main Image Viewer */}
-        <div className="w-full h-[55vh] flex items-center justify-center bg-gray-100 rounded-lg mb-4">
+        <div className="w-full h-80 sm:h-[55vh] flex items-center justify-center bg-gray-100 rounded-lg mb-4">
             <button onClick={() => setIsModalOpen(true)} className="w-full h-full cursor-pointer group focus:outline-none" title="Clique para ampliar">
               <img 
                 src={output.modelImage} 

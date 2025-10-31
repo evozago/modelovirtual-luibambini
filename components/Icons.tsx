@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const LogoIcon: React.FC = () => (
@@ -92,5 +91,32 @@ export const XIcon: React.FC<{ className?: string }> = ({ className }) => (
 export const InfoIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+    </svg>
+);
+
+export const WebsiteIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A11.953 11.953 0 0112 16.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253M18.716 14.253A9.004 9.004 0 0112 21" />
+    </svg>
+);
+
+export const InstagramIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+);
+
+export const WhatsAppIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.31 20.6C8.75 21.39 10.36 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 6.45 17.5 2 12.04 2M12.04 3.67C16.56 3.67 20.28 7.39 20.28 11.91C20.28 16.43 16.56 20.15 12.04 20.15C10.49 20.15 8.99 19.74 7.69 19L7.24 18.75L4.54 19.5L5.34 16.89L5.06 16.43C4.24 15.03 3.8 13.5 3.8 11.91C3.8 7.39 7.52 3.67 12.04 3.67M9.13 7.82C8.91 7.32 8.69 7.31 8.53 7.31C8.31 7.31 8.1 7.32 7.88 7.32C7.67 7.32 7.39 7.4 7.14 7.82C6.89 8.24 6.22 8.87 6.22 10.16C6.22 11.46 7.16 12.69 7.32 12.89C7.48 13.09 8.87 15.25 11.01 16.14C13.15 17.04 13.15 16.63 13.43 16.6C13.71 16.57 14.88 15.91 15.19 15.13C15.49 14.35 15.49 13.69 15.41 13.53C15.33 13.37 15.15 13.29 14.88 13.13C14.6 12.97 13.43 12.38 13.18 12.28C12.93 12.18 12.75 12.14 12.58 12.42C12.41 12.7 11.93 13.29 11.78 13.45C11.62 13.61 11.46 13.65 11.21 13.53C10.95 13.41 10.06 13.11 9.03 12.19C8.21 11.46 7.66 10.58 7.53 10.32C7.39 10.06 7.52 9.91 7.66 9.77C7.79 9.64 7.94 9.45 8.08 9.29C8.22 9.13 8.27 9.01 8.35 8.85C8.43 8.69 8.39 8.53 8.31 8.37C8.23 8.21 8.91 7.32 9.13 7.82Z" />
+    </svg>
+);
+
+export const MapPinIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
     </svg>
 );
