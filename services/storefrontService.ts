@@ -13,10 +13,16 @@ export interface StoreProduct {
   barcode: string | null;
 }
 
-// Obtém a URL base da API a partir das variáveis de ambiente.
-// Em desenvolvimento, será 'modelovirtual-luibambini.vercel.app'.
-// Em produção, será uma string vazia, resultando em uma chamada relativa '/api/shopify-proxy'.
-const API_BASE_URL = import.meta.env.modelovirtual-luibambini.vercel.app || '';
+// --- CONFIGURAÇÃO MANUAL NECESSÁRIA PARA TESTES ---
+// O ambiente de desenvolvimento (AI Studio) não sabe o endereço do seu backend (a função na Vercel).
+// Para que a busca de produtos funcione, a URL da sua aplicação Vercel está configurada abaixo.
+const VERCEL_DEPLOYMENT_URL = 'https://modelovirtual-luibambini.vercel.app';
+
+// O código abaixo usa a variável de ambiente VITE_API_BASE_URL (para produção na Vercel)
+// ou a URL manual que você configurou acima (para desenvolvimento/testes).
+// A verificação `import.meta.env && ...` previne o crash quando `import.meta.env` é indefinido.
+const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_BASE_URL) || VERCEL_DEPLOYMENT_URL || '';
+
 
 /**
  * Busca produtos fazendo uma requisição à nossa Vercel Serverless Function, que atua como um proxy seguro para a API Admin do Shopify.
@@ -24,7 +30,12 @@ const API_BASE_URL = import.meta.env.modelovirtual-luibambini.vercel.app || '';
  * @returns Uma promessa que resolve para um array de produtos.
  */
 export const searchProducts = async (query: string): Promise<StoreProduct[]> => {
-  console.log(`Buscando por: "${query}" através da função serverless.`);
+  // Se a URL não estiver configurada, lançamos um erro claro.
+  if (!API_BASE_URL) {
+     throw new Error('A URL da API (API_BASE_URL) não foi configurada. Verifique as variáveis de ambiente ou a configuração manual no arquivo `services/storefrontService.ts`.');
+  }
+
+  console.log(`Buscando por: "${query}" através da função serverless em ${API_BASE_URL}.`);
 
   try {
     // Constrói a URL completa para a API.

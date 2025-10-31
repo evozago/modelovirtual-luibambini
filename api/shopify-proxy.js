@@ -19,8 +19,9 @@ export default async function handler(req, res) {
   }
   
   // Pega as credenciais das variáveis de ambiente configuradas no painel da Vercel.
-  const shopifyAdminToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
-  const shopifyShopName = process.env.SHOPIFY_SHOP_NAME;
+  // Para testes locais, os valores fornecidos são usados como fallback.
+  const shopifyAdminToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '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';
+  const shopifyShopName = process.env.SHOPIFY_SHOP_NAME || 'luibambini-9396';
 
   // Se as credenciais não estiverem configuradas, retorna um erro claro.
   if (!shopifyAdminToken || !shopifyShopName) {

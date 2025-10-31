@@ -22,7 +22,7 @@ Se ainda não o fez, envie todo o código do projeto para um novo repositório n
 
     | Nome (Name)                     | Valor (Value)                                     | Descrição                                          |
     | ------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
-    | `GEMINI_API_KEY`                | `sua-chave-api-gemini`                            | Sua chave de API para a API do Google Gemini.      |
+    | `VITE_GEMINI_API_KEY`           | `sua-chave-api-gemini`                            | Sua chave de API do Google Gemini. **Importante:** O nome deve começar com `VITE_` para que o frontend possa acessá-la durante o build. |
     | `SHOPIFY_ADMIN_API_ACCESS_TOKEN`| `shpat_...`                                       | Seu token de acesso da API Admin do Shopify.       |
     | `SHOPIFY_SHOP_NAME`             | `nome-da-sua-loja`                                | De `nome-da-sua-loja.myshopify.com`.                |
 
