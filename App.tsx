@@ -179,11 +179,11 @@ export default function App() {
             <button
               onClick={handleProcessImage}
               disabled={isButtonDisabled}
-              className="w-full bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-300 ease-in-out transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:scale-100"
+              className="w-full bg-pink-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Criar Look com IA
             </button>
-            <button onClick={handleReset} className="mt-4 text-sm text-gray-500 hover:text-gray-700 w-full">
+            <button onClick={handleReset} className="mt-4 text-sm text-gray-500 hover:text-pink-600 w-full transition-colors">
               Escolher outras imagens
             </button>
         </div>
@@ -258,11 +258,11 @@ export default function App() {
       <main className="w-full max-w-7xl mx-auto flex flex-col items-center flex-grow">
         <header className="text-center mb-8">
           <div className="flex justify-center items-center gap-3 mb-2">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
-              <span style={{ color: '#54c5c1' }}>Lui</span> <span style={{ color: '#e8a1b3' }}>Bambini</span> iA Editor
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">
+              <span className="text-pink-600">Lui Bambini</span> | Provador Virtual
             </h1>
           </div>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
            Crie looks incríveis combinando peças para gerar modelos com IA.
           </p>
         </header>
@@ -270,11 +270,11 @@ export default function App() {
         <div className="w-full flex-grow">
           {!hasAnyImage ? (
             <div className="w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <div className="flex justify-center mb-6 border-b border-gray-200">
-                  <button onClick={() => setUploadMode('separate')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'separate' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                <div className="flex justify-center mb-8 border-b border-gray-200">
+                  <button onClick={() => setUploadMode('separate')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'separate' ? 'text-pink-600 border-b-2 border-pink-600 font-bold' : 'text-gray-500 hover:text-gray-700'}`}>
                     Peças Separadas
                   </button>
-                  <button onClick={() => setUploadMode('combined')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'combined' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <button onClick={() => setUploadMode('combined')} className={`px-4 py-2 text-lg font-medium transition-colors duration-200 ${uploadMode === 'combined' ? 'text-pink-600 border-b-2 border-pink-600 font-bold' : 'text-gray-500 hover:text-gray-700'}`}>
                     Foto Única do Look
                   </button>
                 </div>
@@ -293,7 +293,7 @@ export default function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              <div className="w-full flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 gap-y-6">
+              <div className="w-full flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 gap-y-6 lg:sticky lg:top-8">
                 {uploadMode === 'separate' ? renderSeparatePreviews() : renderCombinedPreviews()}
               </div>
 
@@ -306,28 +306,28 @@ export default function App() {
         </div>
       </main>
       <footer className="w-full max-w-4xl mx-auto text-center text-gray-600 mt-12 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-10 md:gap-8 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-sm text-left">
           {/* Contact */}
-          <div className="flex flex-col items-center md:items-start gap-3">
-            <h3 className="font-semibold text-gray-800 uppercase tracking-wider">Contato</h3>
-            <a href="https://www.luibambini.com.br/pages/contact" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+          <div className="flex flex-col items-start gap-3">
+            <h3 className="font-semibold text-gray-800 uppercase tracking-wider border-b-2 border-pink-300 pb-1">Contato</h3>
+            <a href="https://www.luibambini.com.br/pages/contact" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors font-medium">
                 <WhatsAppIcon className="w-5 h-5" />
                 <span>Fale com uma consultora</span>
             </a>
-            <a href="https://www.instagram.com/luibambini" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+            <a href="https://www.instagram.com/luibambini" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors font-medium">
                 <InstagramIcon className="w-5 h-5" />
                 <span>@luibambini</span>
             </a>
-            <a href="https://www.luibambini.com.br" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors">
+            <a href="https://www.luibambini.com.br" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-pink-600 transition-colors font-medium">
                 <WebsiteIcon className="w-5 h-5" />
                 <span>www.luibambini.com.br</span>
             </a>
           </div>
 
           {/* Address */}
-          <div className="flex flex-col items-center md:items-start gap-3 text-center md:text-left">
-            <h3 className="font-semibold text-gray-800 uppercase tracking-wider">Endereço</h3>
-            <a href="https://maps.app.goo.gl/HATW2qGmyaHwX9gYA" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors">
+          <div className="flex flex-col items-start gap-3 text-left">
+            <h3 className="font-semibold text-gray-800 uppercase tracking-wider border-b-2 border-pink-300 pb-1">Endereço</h3>
+            <a href="https://maps.app.goo.gl/HATW2qGmyaHwX9gYA" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition-colors font-medium">
               <div className="flex items-start gap-2">
                   <MapPinIcon className="w-5 h-5 mt-0.5 flex-shrink-0" />
                   <span>Avenida T-9, 1986 - Jardim América<br />Goiânia - Goias</span>

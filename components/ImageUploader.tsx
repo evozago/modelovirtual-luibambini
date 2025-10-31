@@ -51,19 +51,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, onO
       onDragOver={handleDrag}
       onDrop={handleDrop}
       className={`relative flex flex-col items-center justify-center w-full h-64 sm:h-80 border-2 border-dashed rounded-lg transition-colors duration-200 ${
-        isDragging ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50'
+        isDragging ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50 hover:border-pink-400 transition-colors'
       }`}
     >
-      <div className="text-center p-8">
+      <div className="text-center p-8 group">
         <div className="flex justify-center mb-4">
-            <UploadIcon className={`w-12 h-12 transition-colors ${isDragging ? 'text-pink-600' : 'text-gray-400'}`} />
+            <UploadIcon className={`w-12 h-12 transition-colors ${isDragging ? 'text-pink-600' : 'text-gray-400 group-hover:text-pink-500'}`} />
         </div>
         <p className="text-xl font-semibold text-gray-700">Arraste e solte uma imagem aqui</p>
         <p className="text-gray-500 mt-1">ou</p>
         <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
           <label
             htmlFor="file-upload"
-            className="cursor-pointer rounded-md bg-white px-4 py-2 text-sm font-semibold text-pink-600 ring-1 ring-inset ring-pink-300 hover:bg-pink-50"
+            className="cursor-pointer rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-pink-700 transition-colors"
           >
             Selecione um arquivo
           </label>
@@ -71,7 +71,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, onO
               <button
                   type="button"
                   onClick={onOpenProductSearch}
-                  className="rounded-md bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600 ring-1 ring-inset ring-pink-300 hover:bg-pink-100"
+                  className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-pink-600 ring-1 ring-inset ring-pink-600 hover:bg-pink-50 transition-colors"
               >
                   Buscar na Loja
               </button>

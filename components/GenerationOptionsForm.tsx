@@ -18,7 +18,7 @@ const SelectField: React.FC<{
     <select
       value={value}
       onChange={onChange}
-      className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm rounded-md"
+      className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-pink-600 focus:border-pink-600 sm:text-sm rounded-xl"
     >
       {children}
     </select>
@@ -32,7 +32,7 @@ export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ option
 
   return (
     <div className="w-full mb-6 space-y-4">
-       <h2 className="text-xl font-semibold text-gray-700 mb-4">Personalize a Imagem Gerada</h2>
+       <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-pink-300 pb-2">Personalize a Imagem Gerada</h2>
        
         {!isSetCreationMode && (
             <SelectField label="Tipo de Produto" value={(options as GenerationOptions).pieceCount} onChange={() => {}}>

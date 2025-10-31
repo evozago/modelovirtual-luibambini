@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        allowedHosts: ['3000-ind28u0rny2id9o1kt9vm-759a139a.manusvm.computer'],
       },
       plugins: [react()],
       // A injeção manual de variáveis de ambiente é necessária para este ambiente de execução específico.
