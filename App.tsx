@@ -13,6 +13,37 @@ import { ProductSearchModal } from './components/ProductSearchModal';
 
 type ClothingPart = 'top' | 'bottom' | 'shoes' | 'combined';
 
+const getGeminiErrorMessage = (error: unknown): string => {
+  const defaultMessage = 'Ocorreu um erro ao processar a imagem. Por favor, tente novamente.';
+
+  if (error instanceof Error) {
+    // The error message from the SDK can be a JSON string.
+    // Check for the most critical key phrases first.
+    if (error.message.includes('leaked')) {
+      return 'Sua chave de API foi bloqueada por motivos de segurança. Por favor, gere uma nova chave de API no Google AI Studio.';
+    }
+    if (error.message.includes('API key not valid')) {
+      return 'A chave de API fornecida não é válida. Verifique se a chave está correta no seu ambiente.';
+    }
+
+    // Try to parse for a more specific message from the API.
+    try {
+      const errorJson = JSON.parse(error.message);
+      const apiMessage = errorJson?.error?.message;
+      if (apiMessage) {
+        return `Erro da IA: ${apiMessage}`;
+      }
+    } catch (e) {
+      // Not a JSON error, just return the plain error message.
+      return error.message;
+    }
+    // It was a JSON error but didn't have the expected structure, return the original message.
+    return error.message;
+  }
+
+  return defaultMessage;
+};
+
 export default function App() {
   const [uploadMode, setUploadMode] = useState<'separate' | 'combined'>('separate');
   const [clothingImages, setClothingImages] = useState<{ top: File | null; bottom: File | null; shoes: File | null; combined: File | null }>({ top: null, bottom: null, shoes: null, combined: null });
@@ -109,7 +140,8 @@ export default function App() {
       setProcessingState({ step: ProcessingStep.DONE });
     } catch (err) {
       console.error(err);
-      setError('Ocorreu um erro ao processar as imagens. Por favor, tente novamente.');
+      const errorMessage = getGeminiErrorMessage(err);
+      setError(errorMessage);
       setProcessingState({ step: ProcessingStep.ERROR });
     }
   }, [clothingImages, generationOptions, uploadMode]);
@@ -135,7 +167,8 @@ export default function App() {
         setProcessingState({ step: ProcessingStep.DONE });
     } catch (err) {
         console.error(err);
-        setError('Ocorreu um erro ao editar a imagem. Por favor, tente novamente.');
+        const errorMessage = getGeminiErrorMessage(err);
+        setError(errorMessage);
         setProcessingState({ step: ProcessingStep.ERROR });
     }
 }, [productOutput]);

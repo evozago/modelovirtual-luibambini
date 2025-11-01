@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
     // Carrega as variáveis de ambiente do diretório raiz do projeto.
     const env = loadEnv(mode, process.cwd(), '');
 
+    // Prioriza VITE_GEMINI_API_KEY, mas usa GEMINI_API_KEY como fallback para flexibilidade na Vercel.
+    const geminiApiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY;
+
     return {
       server: {
         port: 3000,
@@ -21,7 +24,8 @@ export default defineConfig(({ mode }) => {
       // O Vite substituirá essas chaves pelos seus valores correspondentes durante o build,
       // resolvendo o erro "Cannot read properties of undefined".
       define: {
-        'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
+        // Define sempre VITE_GEMINI_API_KEY para que o código do frontend possa usá-la de forma consistente.
+        'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(geminiApiKey),
         'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL)
       },
       resolve: {

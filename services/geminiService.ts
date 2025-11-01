@@ -2,13 +2,16 @@ import { GoogleGenAI, Modality, Type } from '@google/genai';
 import type { GenerationOptions } from '../types';
 import { Age, Gender, PieceCount } from '../types';
 
-// O AI Studio injeta a chave da API em `process.env.API_KEY`.
-// O build da Vercel usa o `vite.config.ts` para injetar `import.meta.env.VITE_GEMINI_API_KEY`.
-// Esta lógica garante que a chave seja encontrada em ambos os ambientes.
-const API_KEY = process.env.API_KEY || (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY);
+// O código é configurado para encontrar a chave de API em diferentes ambientes:
+// 1. `process.env.API_KEY`: Injetado pelo ambiente do AI Studio.
+// 2. `import.meta.env.VITE_GEMINI_API_KEY`: Injetado pelo processo de build do Vite.
+//    - O arquivo `vite.config.ts` foi atualizado para usar a variável de ambiente `VITE_GEMINI_API_KEY` (preferencial)
+//      ou `GEMINI_API_KEY` (como fallback) do seu ambiente Vercel.
+//    - Isso garante que, se você definir `GEMINI_API_KEY` na Vercel, o app funcionará.
+const API_KEY = process.env.API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  throw new Error("Chave de API do Gemini não encontrada. Verifique se a API_KEY está configurada no ambiente do AI Studio ou se VITE_GEMINI_API_KEY está definida nas variáveis de ambiente do seu projeto Vercel.");
+  throw new Error("Chave de API do Gemini não encontrada. Verifique se a API_KEY está configurada no ambiente do AI Studio ou se VITE_GEMINI_API_KEY (ou GEMINI_API_KEY) está definida nas variáveis de ambiente do seu projeto Vercel.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
