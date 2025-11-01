@@ -13,16 +13,10 @@ export interface StoreProduct {
   barcode: string | null;
 }
 
-// --- CONFIGURAÇÃO MANUAL NECESSÁRIA PARA TESTES ---
-// O ambiente de desenvolvimento (AI Studio) não sabe o endereço do seu backend (a função na Vercel).
-// Para que a busca de produtos funcione, a URL da sua aplicação Vercel está configurada abaixo.
-const VERCEL_DEPLOYMENT_URL = 'https://ia.luibambini.com.br';
-
-// O código abaixo usa a variável de ambiente VITE_API_BASE_URL (para produção na Vercel)
-// ou a URL manual que você configurou acima (para desenvolvimento/testes).
-// A verificação `import.meta.env && ...` previne o crash quando `import.meta.env` é indefinido.
-// FIX: Cast `import.meta` to `any` to resolve TypeScript error about missing `env` property.
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || VERCEL_DEPLOYMENT_URL || '';
+// O frontend chama a função serverless usando um caminho relativo.
+// Isso funciona em produção (ex: https://ia.luibambini.com.br/api/shopify-proxy)
+// e em qualquer outro ambiente da Vercel (ex: ...vercel.app/api/shopify-proxy).
+const API_PROXY_PATH = '/api/shopify-proxy';
 
 
 /**
@@ -31,16 +25,11 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || VERCEL_DEPLO
  * @returns Uma promessa que resolve para um array de produtos.
  */
 export const searchProducts = async (query: string): Promise<StoreProduct[]> => {
-  // Se a URL não estiver configurada, lançamos um erro claro.
-  if (!API_BASE_URL) {
-     throw new Error('A URL da API (API_BASE_URL) não foi configurada. Verifique as variáveis de ambiente ou a configuração manual no arquivo `services/storefrontService.ts`.');
-  }
-
-  console.log(`Buscando por: "${query}" através da função serverless em ${API_BASE_URL}.`);
+  console.log(`Buscando por: "${query}" através da função serverless em ${API_PROXY_PATH}.`);
 
   try {
-    // Constrói a URL completa para a API.
-    const apiUrl = `${API_BASE_URL}/api/shopify-proxy?search=${encodeURIComponent(query)}`;
+    // Constrói a URL completa para a API usando o caminho relativo.
+    const apiUrl = `${API_PROXY_PATH}?search=${encodeURIComponent(query)}`;
     const response = await fetch(apiUrl);
 
     if (!response.ok) {

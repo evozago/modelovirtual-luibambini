@@ -14,6 +14,13 @@ export default defineConfig(({ mode }) => {
     // Prioriza VITE_IA_API_KEY, mas usa IA_API_KEY como fallback para flexibilidade na Vercel.
     const iaApiKey = env.VITE_IA_API_KEY || env.IA_API_KEY;
 
+    // Log de diagnóstico para o processo de build na Vercel.
+    if (iaApiKey) {
+      console.log('✅ Chave de API (IA_API_KEY) encontrada e será injetada no build.');
+    } else {
+      console.log('❌ ATENÇÃO: Chave de API (IA_API_KEY ou VITE_IA_API_KEY) NÃO foi encontrada nas variáveis de ambiente. O aplicativo não funcionará.');
+    }
+
     return {
       server: {
         port: 3000,
@@ -21,12 +28,10 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       // A injeção manual de variáveis de ambiente é necessária para este ambiente de execução específico.
-      // O Vite substituirá essas chaves pelos seus valores correspondentes durante o build,
-      // resolvendo o erro "Cannot read properties of undefined".
+      // O Vite substituirá essas chaves pelos seus valores correspondentes durante o build.
       define: {
         // Define sempre VITE_IA_API_KEY para que o código do frontend possa usá-la de forma consistente.
         'import.meta.env.VITE_IA_API_KEY': JSON.stringify(iaApiKey),
-        'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL)
       },
       resolve: {
         alias: {

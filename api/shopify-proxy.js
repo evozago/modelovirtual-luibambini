@@ -5,7 +5,11 @@ import axios from 'axios';
 export default async function handler(req, res) {
   // Configura os cabeçalhos CORS para permitir que nosso app frontend chame esta função.
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Em produção, restrinja para o seu domínio: 'https://seu-site.com'
+  // Restringe a origem para o seu domínio de produção ou qualquer subdomínio da Vercel.
+  const origin = req.headers.origin;
+  if (origin && (origin === 'https://ia.luibambini.com.br' || origin.endsWith('.vercel.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -20,8 +24,7 @@ export default async function handler(req, res) {
   
   // Pega as credenciais das variáveis de ambiente configuradas no painel da Vercel.
   const shopifyAdminToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
-  // Procura pelo nome da variável do usuário primeiro, depois pelo nome antigo, e por último usa o fallback.
-  const shopifyShopName = process.env.NOME_DA_LOJA_SHOPIFY || process.env.SHOPIFY_SHOP_NAME || 'luibambini-9396';
+  const shopifyShopName = process.env.SHOPIFY_SHOP_NAME;
 
   // Se as credenciais não estiverem configuradas, retorna um erro claro.
   if (!shopifyAdminToken || !shopifyShopName) {
