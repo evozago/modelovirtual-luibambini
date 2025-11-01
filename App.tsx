@@ -17,16 +17,19 @@ const getGeminiErrorMessage = (error: unknown): string => {
   const defaultMessage = 'Ocorreu um erro ao processar a imagem. Por favor, tente novamente.';
 
   if (error instanceof Error) {
-    // The error message from the SDK can be a JSON string.
-    // Check for the most critical key phrases first.
+    // O erro do SDK pode vir como uma string JSON.
+    // Verificamos as frases mais críticas primeiro.
     if (error.message.includes('leaked')) {
       return 'Sua chave de API foi bloqueada por motivos de segurança. Por favor, gere uma nova chave de API no Google AI Studio.';
     }
     if (error.message.includes('API key not valid')) {
       return 'A chave de API fornecida não é válida. Verifique se a chave está correta no seu ambiente.';
     }
+    if (error.message.includes('expired')) {
+        return 'Sua chave de API expirou. Por favor, gere uma nova chave de API no Google AI Studio.';
+    }
 
-    // Try to parse for a more specific message from the API.
+    // Tenta analisar o erro para uma mensagem mais específica da API.
     try {
       const errorJson = JSON.parse(error.message);
       const apiMessage = errorJson?.error?.message;
@@ -34,10 +37,10 @@ const getGeminiErrorMessage = (error: unknown): string => {
         return `Erro da IA: ${apiMessage}`;
       }
     } catch (e) {
-      // Not a JSON error, just return the plain error message.
+      // Não é um erro JSON, retorna a mensagem de erro simples.
       return error.message;
     }
-    // It was a JSON error but didn't have the expected structure, return the original message.
+    // Era um erro JSON, mas sem a estrutura esperada, retorna a mensagem original.
     return error.message;
   }
 
