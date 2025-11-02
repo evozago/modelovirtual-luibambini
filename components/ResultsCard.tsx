@@ -86,6 +86,16 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
 
         {/* Details Section */}
         <div className="flex flex-col gap-4 mt-auto border-t border-gray-200 pt-6">
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex-grow">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Post para Redes Sociais</label>
+              <p className="mt-1 text-gray-800 text-base whitespace-pre-wrap">{output.socialMediaPost}</p>
+            </div>
+            <CopyButton textToCopy={output.socialMediaPost} />
+          </div>
+
+          {/* Ocultado a pedido do usuário, mas mantido no código para uso futuro, se necessário */}
+          {/*
             <div className="flex justify-between items-start gap-4">
               <div className="flex-grow">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Descrição Curta</label>
@@ -101,6 +111,7 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
               </div>
                <CopyButton textToCopy={output.continuationCommand} />
             </div>
+          */}
         
             <div className="mt-2 group">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">

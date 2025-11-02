@@ -1,4 +1,5 @@
 
+
 export enum ProcessingStep {
   IDLE = 'IDLE',
   CLEANING = 'CLEANING',
@@ -18,6 +19,7 @@ export interface ProductOutput {
   modelImage: string;
   description: string;
   continuationCommand: string;
+  socialMediaPost: string;
 }
 
 export enum Gender {
@@ -45,6 +47,7 @@ export enum Background {
   STUDIO = 'STÚDIO FOTOGRAFICO',
   RUNWAY = 'PASSARELA',
   PARK = 'PARQUE DE DIVERSÃO',
+  CHRISTMAS = 'NATAL',
 }
 
 export enum PieceCount {

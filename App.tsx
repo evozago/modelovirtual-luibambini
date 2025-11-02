@@ -1,8 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { ProcessingView } from './components/ProcessingView';
 import { ResultsCard } from './components/ResultsCard';
-import { WebsiteIcon, InstagramIcon, WhatsAppIcon, MapPinIcon } from './components/Icons';
+import { WebsiteIcon, InstagramIcon, WhatsAppIcon, MapPinIcon, XIcon } from './components/Icons';
 import { processImage, generateDescription, generateModelImage, editImage } from './services/geminiService';
 import { combineImages, fileToBase64 } from './utils/fileUtils';
 import type { ProcessingState, ProductOutput, GenerationOptions } from './types';
@@ -61,6 +62,7 @@ export default function App() {
     background: '',
   });
   const [productSearchTarget, setProductSearchTarget] = useState<ClothingPart | null>(null);
+  const [combinedPieceCount, setCombinedPieceCount] = useState<PieceCount>(PieceCount.SET);
 
 
   const handleImageUpload = (part: ClothingPart, file: File) => {
@@ -69,6 +71,10 @@ export default function App() {
     setError(null);
     setProcessingState({ step: ProcessingStep.IDLE });
     setIsEditing(false);
+  };
+  
+  const handleRemoveImage = (part: ClothingPart) => {
+    setClothingImages(prev => ({...prev, [part]: null}));
   };
 
   const handleImageFromUrl = useCallback(async (url: string) => {
@@ -101,12 +107,16 @@ export default function App() {
   
   const handleProcessImage = useCallback(async () => {
     let filesToProcess: File[] = [];
+    let pieceCountForApi: PieceCount;
+
     if (uploadMode === 'separate') {
         if (!clothingImages.top || !clothingImages.bottom) return;
         filesToProcess = [clothingImages.top, clothingImages.bottom, clothingImages.shoes].filter((f): f is File => f !== null);
+        pieceCountForApi = PieceCount.SET;
     } else { // 'combined' mode
         if (!clothingImages.combined) return;
         filesToProcess = [clothingImages.combined, clothingImages.shoes].filter((f): f is File => f !== null);
+        pieceCountForApi = combinedPieceCount;
     }
     
     if (filesToProcess.length === 0) return;
@@ -121,11 +131,11 @@ export default function App() {
       );
       
       const { combinedImageBase64, mimeType } = await combineImages(...filesToProcess);
-      const cleanedImageBase64 = await processImage(combinedImageBase64, mimeType, PieceCount.SET);
+      const cleanedImageBase64 = await processImage(combinedImageBase64, mimeType, pieceCountForApi);
 
       setProcessingState({ step: ProcessingStep.GENERATING_TEXT });
-      const textGenOptions: GenerationOptions = { ...generationOptions, pieceCount: PieceCount.SET };
-      const { description, command } = await generateDescription(cleanedImageBase64, textGenOptions);
+      const textGenOptions: GenerationOptions = { ...generationOptions, pieceCount: pieceCountForApi };
+      const { description, command, socialMediaPost } = await generateDescription(cleanedImageBase64, textGenOptions);
 
       setProcessingState({ step: ProcessingStep.GENERATE_MODEL_IMAGE });
       const modelImageBase64 = await generateModelImage(
@@ -139,6 +149,7 @@ export default function App() {
         modelImage: `data:image/png;base64,${modelImageBase64}`,
         description,
         continuationCommand: command,
+        socialMediaPost,
       });
       setProcessingState({ step: ProcessingStep.DONE });
     } catch (err) {
@@ -147,7 +158,7 @@ export default function App() {
       setError(errorMessage);
       setProcessingState({ step: ProcessingStep.ERROR });
     }
-  }, [clothingImages, generationOptions, uploadMode]);
+  }, [clothingImages, generationOptions, uploadMode, combinedPieceCount]);
 
   const handleEditImage = useCallback(async (maskBase64: string, editPrompt: string) => {
     if (!productOutput) return;
@@ -208,8 +219,43 @@ export default function App() {
           <GenerationOptionsForm
             options={generationOptions}
             setOptions={setGenerationOptions}
-            isSetCreationMode={true}
+            isSetCreationMode={uploadMode === 'separate'}
           />
+           {uploadMode === 'combined' && (
+             <div className="w-full my-4">
+                <label className="block text-sm font-medium text-gray-700 text-left mb-2">A foto contém:</label>
+                <div className="flex gap-x-6 justify-start">
+                    <div className="flex items-center">
+                        <input
+                            id="piece-count-set"
+                            name="piece-count"
+                            type="radio"
+                            value={PieceCount.SET}
+                            checked={combinedPieceCount === PieceCount.SET}
+                            onChange={() => setCombinedPieceCount(PieceCount.SET)}
+                            className="focus:ring-pink-500 h-4 w-4 text-pink-600 border-gray-300"
+                        />
+                        <label htmlFor="piece-count-set" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                            {PieceCount.SET}
+                        </label>
+                    </div>
+                    <div className="flex items-center">
+                        <input
+                            id="piece-count-single"
+                            name="piece-count"
+                            type="radio"
+                            value={PieceCount.SINGLE}
+                            checked={combinedPieceCount === PieceCount.SINGLE}
+                            onChange={() => setCombinedPieceCount(PieceCount.SINGLE)}
+                            className="focus:ring-pink-500 h-4 w-4 text-pink-600 border-gray-300"
+                        />
+                        <label htmlFor="piece-count-single" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                            {PieceCount.SINGLE}
+                        </label>
+                    </div>
+                </div>
+            </div>
+          )}
         </div>
         <div className="w-full mt-auto">
             <button
@@ -235,7 +281,14 @@ export default function App() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Superior</h2>
         <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.top ? (
-            <img src={URL.createObjectURL(clothingImages.top)} alt="Parte Superior" className="rounded-lg max-w-full max-h-full object-contain"/>
+            <div className="relative w-full h-full group">
+                <img src={URL.createObjectURL(clothingImages.top)} alt="Parte Superior" className="rounded-lg max-w-full max-h-full object-contain w-full h-full"/>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleRemoveImage('top')} className="p-1.5 bg-white/80 rounded-full shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-pink-500" aria-label="Remover imagem">
+                        <XIcon className="w-5 h-5 text-gray-800"/>
+                    </button>
+                </div>
+            </div>
           ) : (
             <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('top', file)} onOpenProductSearch={() => openProductSearch('top')} /></div>
           )}
@@ -245,7 +298,14 @@ export default function App() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Parte Inferior</h2>
         <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.bottom ? (
-            <img src={URL.createObjectURL(clothingImages.bottom)} alt="Parte Inferior" className="rounded-lg max-w-full max-h-full object-contain"/>
+            <div className="relative w-full h-full group">
+                <img src={URL.createObjectURL(clothingImages.bottom)} alt="Parte Inferior" className="rounded-lg max-w-full max-h-full object-contain w-full h-full"/>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleRemoveImage('bottom')} className="p-1.5 bg-white/80 rounded-full shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-pink-500" aria-label="Remover imagem">
+                        <XIcon className="w-5 h-5 text-gray-800"/>
+                    </button>
+                </div>
+            </div>
           ) : (
             <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('bottom', file)} onOpenProductSearch={() => openProductSearch('bottom')} /></div>
           )}
@@ -255,7 +315,14 @@ export default function App() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
         <div className="w-full h-56 sm:h-[30vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.shoes ? (
-            <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
+            <div className="relative w-full h-full group">
+                <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain w-full h-full"/>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleRemoveImage('shoes')} className="p-1.5 bg-white/80 rounded-full shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-pink-500" aria-label="Remover imagem">
+                        <XIcon className="w-5 h-5 text-gray-800"/>
+                    </button>
+                </div>
+            </div>
           ) : (
             <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} onOpenProductSearch={() => openProductSearch('shoes')} /></div>
           )}
@@ -267,10 +334,17 @@ export default function App() {
   const renderCombinedPreviews = () => (
     <>
       <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Look Completo</h2>
+        <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Foto Única do Look</h2>
         <div className="w-full h-64 sm:h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.combined ? (
-            <img src={URL.createObjectURL(clothingImages.combined)} alt="Look Completo" className="rounded-lg max-w-full max-h-full object-contain"/>
+             <div className="relative w-full h-full group">
+                <img src={URL.createObjectURL(clothingImages.combined)} alt="Look Completo" className="rounded-lg max-w-full max-h-full object-contain w-full h-full"/>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleRemoveImage('combined')} className="p-1.5 bg-white/80 rounded-full shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-pink-500" aria-label="Remover imagem">
+                        <XIcon className="w-5 h-5 text-gray-800"/>
+                    </button>
+                </div>
+            </div>
           ) : (
             <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} onOpenProductSearch={() => openProductSearch('combined')} /></div>
           )}
@@ -280,7 +354,14 @@ export default function App() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4 w-full text-left">Calçado (Opcional)</h2>
         <div className="w-full h-64 sm:h-[45vh] flex items-center justify-center bg-gray-50 rounded-lg">
           {clothingImages.shoes ? (
-            <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain"/>
+             <div className="relative w-full h-full group">
+                <img src={URL.createObjectURL(clothingImages.shoes)} alt="Calçado" className="rounded-lg max-w-full max-h-full object-contain w-full h-full"/>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleRemoveImage('shoes')} className="p-1.5 bg-white/80 rounded-full shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-pink-500" aria-label="Remover imagem">
+                        <XIcon className="w-5 h-5 text-gray-800"/>
+                    </button>
+                </div>
+            </div>
           ) : (
             <div className="w-full h-full"><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} onOpenProductSearch={() => openProductSearch('shoes')} /></div>
           )}
@@ -322,7 +403,7 @@ export default function App() {
                    </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                    <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Look Completo</h2><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} onOpenProductSearch={() => openProductSearch('combined')} /></div>
+                    <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Foto Única do Look</h2><ImageUploader onImageUpload={(file) => handleImageUpload('combined', file)} onOpenProductSearch={() => openProductSearch('combined')} /></div>
                     <div><h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Calçado (Opcional)</h2><ImageUploader onImageUpload={(file) => handleImageUpload('shoes', file)} onOpenProductSearch={() => openProductSearch('shoes')} /></div>
                   </div>
                 )}

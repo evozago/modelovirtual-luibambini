@@ -32,7 +32,9 @@ export const ProductSearchModal: React.FC<{ onImageSelect: (imageUrl: string) =>
   const [results, setResults] = useState<StoreProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  // Fix: The return type of `setTimeout` in the browser is `number`, not `NodeJS.Timeout`.
+  // `ReturnType<typeof setTimeout>` correctly infers the type in any JS environment.
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearch = async (searchQuery: string) => {
     setIsLoading(true);

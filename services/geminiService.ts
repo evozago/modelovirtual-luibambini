@@ -69,10 +69,13 @@ Tarefa 2 — Comando de continuação para geração de modelo:
 Usando a descrição que você gerou na Tarefa 1 para preencher o campo [DESCRIÇÃO], crie o comando de continuação EXATAMENTE no seguinte formato:
 "${continuationCommandTemplate}"
 
+Tarefa 3 - Post para Redes Sociais:
+Crie um texto para um post de Instagram para a marca Lui Bambini. O post deve ser cativante, usar a descrição da peça de forma criativa, incluir emojis relevantes e terminar com 3 a 5 hashtags populares de moda infantil (ex: #modainfantil, #lookinhododia, #luibambini, #maedemenina, #maedemenino).
+
 Regras:
 - Use apenas as informações visuais na imagem limpa.
 - Não adicione nem elimine detalhes da peça.
-- Responda com um objeto JSON contendo as chaves "description" e "command".`;
+- Responda com um objeto JSON contendo as chaves "description", "command" e "socialMediaPost".`;
 };
 
 const modelImageSystemInstruction = `Você é um especialista em IA para fotografia de moda infantil, com um olhar meticuloso para detalhes. Sua tarefa segue um processo de duas etapas: Geração e Auto-Correção Crítica.
@@ -132,7 +135,7 @@ export const processImage = async (imageBase64: string, mimeType: string, pieceC
 export const generateDescription = async (
   cleanedImageBase64: string,
   options: GenerationOptions
-): Promise<{ description: string; command: string }> => {
+): Promise<{ description: string; command: string; socialMediaPost: string }> => {
   const textGenerationPrompt = createTextGenerationPrompt(options);
 
   const response = await ai.models.generateContent({
@@ -162,8 +165,12 @@ export const generateDescription = async (
             description:
               'Comando de continuação para gerar uma imagem de modelo.',
           },
+          socialMediaPost: {
+            type: Type.STRING,
+            description: 'Texto para post de Instagram com emojis e hashtags.',
+          }
         },
-        required: ['description', 'command'],
+        required: ['description', 'command', 'socialMediaPost'],
       },
     },
   });
@@ -173,7 +180,8 @@ export const generateDescription = async (
     if (
       result &&
       typeof result.description === 'string' &&
-      typeof result.command === 'string'
+      typeof result.command === 'string' &&
+      typeof result.socialMediaPost === 'string'
     ) {
       return result;
     }
