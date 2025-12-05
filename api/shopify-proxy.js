@@ -5,11 +5,21 @@ import axios from 'axios';
 export default async function handler(req, res) {
   // Configura os cabeçalhos CORS para permitir que nosso app frontend chame esta função.
   res.setHeader('Access-Control-Allow-Credentials', true);
-  // Restringe a origem para o seu domínio de produção ou qualquer subdomínio da Vercel.
+  
   const origin = req.headers.origin;
-  if (origin && (origin === 'https://ia.luibambini.com.br' || origin.endsWith('.vercel.app'))) {
+  // Permite origens de produção, preview da Vercel e localhost/IP local para testes em tablet.
+  if (origin && (
+      origin === 'https://ia.luibambini.com.br' || 
+      origin.endsWith('.vercel.app') || 
+      origin.includes('localhost') || 
+      origin.startsWith('http://192.168.')
+  )) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+     // Se não houver origin (ex: server-to-server), permite *
+     res.setHeader('Access-Control-Allow-Origin', '*');
   }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -130,7 +140,7 @@ export default async function handler(req, res) {
     res.status(200).json(products);
 
   } catch (error) {
-        const statusCode = error.response?.status;
+    const statusCode = error.response?.status;
     const errorDetails = error.response ? error.response.data : error.message;
     let publicMessage = 'Falha ao buscar dados do Shopify.';
     if (statusCode === 401 || statusCode === 403) {

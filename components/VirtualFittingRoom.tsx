@@ -131,12 +131,19 @@ export const VirtualFittingRoom: React.FC<VirtualFittingRoomProps> = ({ onBack }
             <div className="flex flex-col h-full gap-6">
                 <div className="bg-white rounded-2xl shadow-xl border border-pink-100 p-4 flex-grow flex flex-col">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <SparklesIcon className="w-6 h-6 text-pink-500" />
-                            Resultado do Provador
-                        </h2>
-                        <button onClick={handleReset} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                            Novo Provador
+                        <div className="flex items-center gap-4">
+                            <button onClick={handleReset} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Voltar">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-600">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                            </button>
+                            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                                <SparklesIcon className="w-6 h-6 text-pink-500" />
+                                Resultado do Provador
+                            </h2>
+                        </div>
+                        <button onClick={handleReset} className="px-4 py-2 bg-pink-50 text-pink-600 rounded-lg hover:bg-pink-100 font-medium transition-colors">
+                            Novo Look
                         </button>
                     </div>
                     
@@ -146,7 +153,7 @@ export const VirtualFittingRoom: React.FC<VirtualFittingRoomProps> = ({ onBack }
                             <img src={URL.createObjectURL(customerPhoto!)} className="w-full h-full object-cover rounded-lg opacity-50" alt="Original" />
                             <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">Original</div>
                          </div>
-                         <div className="text-gray-400">
+                         <div className="text-gray-400 hidden md:block">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
                             </svg>
@@ -163,6 +170,18 @@ export const VirtualFittingRoom: React.FC<VirtualFittingRoomProps> = ({ onBack }
 
     return (
         <div className="flex flex-col h-full gap-6">
+            <div className="flex justify-start">
+                <button 
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-gray-500 hover:text-pink-600 transition-colors py-2 px-1"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    <span>Voltar ao Estúdio</span>
+                </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
                 
                 {/* Column 1: The Model (Customer) */}

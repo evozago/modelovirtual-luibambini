@@ -25,8 +25,18 @@ export default defineConfig(({ mode }) => {
 
     return {
       server: {
-        port: 3000,
         host: '0.0.0.0',
+        proxy: {
+            // Proxy API requests to the backend server
+            '/api': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            '/api-proxy': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            }
+        }
       },
       plugins: [react()],
       // A injeção manual de variáveis de ambiente é necessária para este ambiente de execução específico.
