@@ -1,8 +1,9 @@
 
+
 import React from 'react';
 import type { ProcessingState } from '../types';
 import { ProcessingStep } from '../types';
-import { SparklesIcon, TextIcon, PersonIcon, BrushIcon } from './Icons';
+import { SparklesIcon, TextIcon, PersonIcon, BrushIcon, VideoCameraIcon } from './Icons';
 
 interface ProcessingViewProps {
   state: ProcessingState;
@@ -28,6 +29,11 @@ const statusMessages: { [key in Exclude<ProcessingStep, 'IDLE' | 'DONE' | 'ERROR
     icon: <BrushIcon className="w-8 h-8 text-pink-500" />,
     text: 'Aplicando edições...',
     subtext: 'A IA está corrigindo a imagem com base na sua solicitação. Um momento.'
+  },
+  [ProcessingStep.GENERATING_VIDEO]: {
+    icon: <VideoCameraIcon className="w-8 h-8 text-pink-500" />,
+    text: 'Gerando vídeo...',
+    subtext: 'A IA está criando um pequeno vídeo do look. Isso pode levar alguns minutos!'
   },
 };
 

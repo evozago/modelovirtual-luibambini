@@ -6,6 +6,7 @@ export enum ProcessingStep {
   GENERATING_TEXT = 'GENERATING_TEXT',
   GENERATE_MODEL_IMAGE = 'GENERATE_MODEL_IMAGE',
   EDITING = 'EDITING',
+  GENERATING_VIDEO = 'GENERATING_VIDEO',
   DONE = 'DONE',
   ERROR = 'ERROR',
 }
@@ -20,6 +21,7 @@ export interface ProductOutput {
   description: string;
   continuationCommand: string;
   socialMediaPost: string;
+  modelVideoUrl?: string;
 }
 
 export enum Gender {
@@ -62,3 +64,5 @@ export interface GenerationOptions {
   theme: Theme;
   background?: Background | '';
 }
+
+export type AppMode = 'studio' | 'fitting-room';

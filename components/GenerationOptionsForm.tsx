@@ -5,6 +5,7 @@ interface GenerationOptionsProps {
   options: Omit<GenerationOptions, 'pieceCount'>;
   setOptions: React.Dispatch<React.SetStateAction<Omit<GenerationOptions, 'pieceCount'>>>;
   isSetCreationMode?: boolean;
+  isModelPhotoUploaded?: boolean;
 }
 
 const SelectField: React.FC<{
@@ -12,20 +13,22 @@ const SelectField: React.FC<{
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   children: React.ReactNode;
-}> = ({ label, value, onChange, children }) => (
+  disabled?: boolean;
+}> = ({ label, value, onChange, children, disabled = false }) => (
   <div className="w-full">
     <label className="block text-sm font-medium text-gray-700 text-left mb-1">{label}</label>
     <select
       value={value}
       onChange={onChange}
-      className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm rounded-md"
+      disabled={disabled}
+      className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
     >
       {children}
     </select>
   </div>
 );
 
-export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ options, setOptions, isSetCreationMode = false }) => {
+export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ options, setOptions, isSetCreationMode = false, isModelPhotoUploaded = false }) => {
   const handleChange = (field: keyof Omit<GenerationOptions, 'pieceCount'>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
     setOptions(prev => ({ ...prev, [field]: e.target.value as any }));
   };
@@ -41,10 +44,10 @@ export const GenerationOptionsForm: React.FC<GenerationOptionsProps> = ({ option
         )}
 
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectField label="Gênero" value={options.gender} onChange={handleChange('gender')}>
+          <SelectField label="Gênero" value={options.gender} onChange={handleChange('gender')} disabled={isModelPhotoUploaded}>
               {Object.values(Gender).map(g => <option key={g} value={g}>{g}</option>)}
           </SelectField>
-          <SelectField label="Idade" value={options.age} onChange={handleChange('age')}>
+          <SelectField label="Idade" value={options.age} onChange={handleChange('age')} disabled={isModelPhotoUploaded}>
               {Object.values(Age).map(a => <option key={a} value={a}>{a}</option>)}
           </SelectField>
           <SelectField label="Tema" value={options.theme} onChange={handleChange('theme')}>

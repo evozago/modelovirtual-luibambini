@@ -62,7 +62,7 @@ Tarefa 1 — Descrição curta:
 Crie uma descrição breve e objetiva no formato:
 [tipo da peça ou conjunto] [característica principal] [cor ou estampa]
 ${pieceTypeInstruction}
-Exemplos: "Vestido floral vermelho", "Conjunto listrado azul com tênis branco", "Macacão jeans claro".
+Exemplos: "Vestido floral vermelho", "Conjunto listrado azul comênis branco", "Macacão jeans claro".
 A descrição deve ter no máximo 10 palavras e ser direta.
 
 Tarefa 2 — Comando de continuação para geração de modelo:
@@ -82,11 +82,11 @@ const modelImageSystemInstruction = `Você é um especialista em IA para fotogra
 
 **Regras Imperativas:**
 
-1.  **Fidelidade Absoluta à Peça**: Você receberá uma imagem 'limpa' (o que vestir) e imagens 'originais' (como deve parecer). Sua prioridade MÁXIMA é a fidelidade às imagens originais de referência. Preserve 100% das cores, estampas, texturas, bordados, costuras e proporções. NÃO redesenhe ou altere a(s) peça(s).
+1.  **Fidelidade Absoluta à Peça**: Você receberá uma imagem 'limpa' (o que vestir) e imagens 'originais' (como deve parecer). Sua prioridade MÁXIMA é a fidelidade às imagens de referência originais. Preserve 100% das cores, estampas, texturas, bordados, costuras e proporções. NÃO redesenhe ou altere a(s) peça(s).
 2.  **Uso das Imagens de Referência**: Use a imagem 'limpa' para aplicar sobre o corpo do modelo. Use as imagens 'originais' para recriar todos os detalhes com perfeição.
 3.  **Ajuste de Tamanho e Caimento**: Adapte a(s) peça(s) proporcionalmente à faixa etária solicitada no prompt. O caimento, dobras, iluminação e perspectiva devem parecer naturais, mas o resultado final deve ser idêntico às referências.
 4.  **Acessórios e Cenário**: Adicione acessórios e crie um cenário que correspondam ao prompt, mas que não modifiquem a(s) peça(s) principal(is).
-5.  **Segurança e Respeito**: As poses devem ser apropriadas para a idade da criança. É PROIBIDO sexualizar a imagem.
+5.  **Segurança e Respeito**: As poses devem ser apropriadas para la idade da criança. É PROIBIDO sexualizar a imagem.
 
 **Processo de Auto-Correção Crítica:**
 
@@ -197,14 +197,61 @@ export const generateDescription = async (
 export const generateModelImage = async (
     cleanedImageBase64: string, 
     continuationCommand: string,
-    referenceImageBase64s: string[]
+    referenceImageBase64s: string[],
+    modelPhotoBase64?: string
 ): Promise<string> => {
+    // Se uma foto de modelo for fornecida, use um prompt e uma estrutura de conteúdo diferentes
+    if (modelPhotoBase64) {
+        const customModelPrompt = `Use a primeira imagem fornecida (uma pessoa) como modelo. Sua tarefa é vestir realisticamente essa pessoa com a peça de roupa da segunda imagem (uma foto limpa do produto). Use as imagens subsequentes como referências de alta fidelidade para os detalhes, textura e cor exatos da roupa. A imagem final deve ser fotorrealista, integrando perfeitamente as roupas no modelo, preservando o rosto, a pose e as características do modelo. Mantenha o fundo original da foto do modelo, a menos que um novo seja especificado no tema.`;
+        
+        const referenceParts = referenceImageBase64s.map(refBase64 => ({
+            inlineData: {
+                data: refBase64,
+                mimeType: 'image/jpeg',
+            }
+        }));
+
+        const response = await ai.models.generateContent({
+          model: imageModel,
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  data: modelPhotoBase64,
+                  mimeType: 'image/jpeg', // Assumindo que o usuário carrega uma foto
+                },
+              },
+              {
+                inlineData: {
+                  data: cleanedImageBase64,
+                  mimeType: 'image/png',
+                },
+              },
+              ...referenceParts,
+              { text: customModelPrompt },
+            ],
+          },
+          config: {
+            responseModalities: [Modality.IMAGE],
+            systemInstruction: modelImageSystemInstruction,
+            temperature: 0.1,
+          },
+        });
+        
+        const imagePart = response.candidates?.[0]?.content?.parts?.[0];
+        if (imagePart && imagePart.inlineData) {
+          return imagePart.inlineData.data;
+        }
+        throw new Error('Falha ao gerar a imagem do modelo. A resposta da IA não continha uma imagem.');
+    }
+    
+    // Lógica existente para modelo gerado por IA
     const technicalCommand = `${continuationCommand}. A roupa vestida no modelo deve ser IDÊNTICA às imagens originais de referência fornecidas. Após a geração inicial, compare sua imagem com as referências e corrija qualquer imprecisão antes de apresentar o resultado final. A fidelidade é o critério mais importante.`;
     
     const referenceParts = referenceImageBase64s.map(refBase64 => ({
         inlineData: {
             data: refBase64,
-            mimeType: 'image/jpeg', // Assume jpeg or png, jpeg is more common for photos
+            mimeType: 'image/jpeg', // Assume jpeg ou png, jpeg é mais comum para fotos
         }
     }));
 
@@ -279,3 +326,53 @@ export const editImage = async (
 
   throw new Error('Falha ao editar a imagem. A resposta da IA não continha uma imagem.');
 };
+
+export const generateVideo = async (imageBase64: string): Promise<string> => {
+    // O modelo Veo requer uma nova instância do cliente para garantir que a chave de API mais recente selecionada pelo usuário seja usada.
+    const VEO_API_KEY = process.env.API_KEY || (import.meta as any).env?.VITE_IA_API_KEY;
+    if (!VEO_API_KEY) {
+        throw new Error("Chave de API do Gemini não encontrada para geração de vídeo.");
+    }
+    const videoAi = new GoogleGenAI({ apiKey: VEO_API_KEY });
+    
+    const videoPrompt = "Crie um vídeo curto e sutil desta modelo. Um movimento suave, como um leve sorriso, um piscar de olhos ou o cabelo balançando com a brisa, seria perfeito. Mantenha o estilo fotográfico e a alta qualidade da imagem original.";
+  
+    let operation = await videoAi.models.generateVideos({
+      model: 'veo-3.1-fast-generate-preview',
+      prompt: videoPrompt,
+      image: {
+        imageBytes: imageBase64,
+        mimeType: 'image/png',
+      },
+      config: {
+        numberOfVideos: 1,
+        resolution: '720p',
+        aspectRatio: '9:16' // Assumindo retrato, pode precisar de ajuste
+      }
+    });
+  
+    while (!operation.done) {
+      // Aguarde 10 segundos antes de verificar o status novamente.
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      operation = await videoAi.operations.getVideosOperation({ operation: operation });
+    }
+
+    // Adiciona verificação de erro na operação concluída
+    if (operation.error) {
+        console.error('Erro na operação de geração de vídeo da IA:', operation.error);
+        // O `operation.error` pode ter um formato como { code: number, message: string }.
+        const errorMessage = typeof operation.error === 'object' && operation.error !== null && 'message' in operation.error
+            ? (operation.error as { message: string }).message
+            : JSON.stringify(operation.error);
+        throw new Error(`A geração do vídeo falhou: ${errorMessage}`);
+    }
+  
+    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+    if (downloadLink) {
+      return downloadLink;
+    }
+  
+    // Se não houver erro nem link, a resposta foi inesperada.
+    console.warn('Operação de vídeo concluída sem erro, mas sem link de vídeo.', operation);
+    throw new Error('Falha ao gerar o vídeo. A resposta da IA não continha um link para o vídeo.');
+  };

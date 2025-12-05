@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import type { ProductOutput } from '../types';
-import { CopyIcon, CheckIcon, RefreshIcon, DownloadIcon, BrushIcon, XIcon, InfoIcon } from './Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, DownloadIcon, BrushIcon, XIcon, InfoIcon, VideoCameraIcon } from './Icons';
 
 interface ResultsCardProps {
   output: ProductOutput;
   onReset: () => void;
   onStartEdit: () => void;
+  onGenerateVideo: () => void;
+  isGeneratingVideo: boolean;
 }
 
 const CopyButton: React.FC<{ textToCopy: string }> = ({ textToCopy }) => {
@@ -29,7 +31,7 @@ const CopyButton: React.FC<{ textToCopy: string }> = ({ textToCopy }) => {
     );
 };
 
-export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onStartEdit }) => {
+export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onStartEdit, onGenerateVideo, isGeneratingVideo }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleDownload = () => {
@@ -55,19 +57,23 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
             </button>
         </div>
 
-        {/* Main Image Viewer */}
+        {/* Main Image/Video Viewer */}
         <div className="w-full h-80 sm:h-[55vh] flex items-center justify-center bg-gray-100 rounded-lg mb-4">
-            <button onClick={() => setIsModalOpen(true)} className="w-full h-full cursor-pointer group focus:outline-none" title="Clique para ampliar">
-              <img 
-                src={output.modelImage} 
-                alt="AI Generated Model" 
-                className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
-              />
-            </button>
+            {output.modelVideoUrl ? (
+                <video src={output.modelVideoUrl} className="max-w-full max-h-full object-contain rounded-lg" controls autoPlay loop playsInline />
+            ) : (
+                <button onClick={() => setIsModalOpen(true)} className="w-full h-full cursor-pointer group focus:outline-none" title="Clique para ampliar">
+                <img 
+                    src={output.modelImage} 
+                    alt="AI Generated Model" 
+                    className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
+                />
+                </button>
+            )}
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <button
                 onClick={handleDownload}
                 className="flex items-center justify-center gap-2 text-sm bg-pink-600 text-white font-semibold py-3 px-3 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-200"
@@ -81,6 +87,14 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
             >
                 <BrushIcon className="w-5 h-5"/>
                 Editar com IA
+            </button>
+            <button
+                onClick={onGenerateVideo}
+                disabled={isGeneratingVideo || !!output.modelVideoUrl}
+                className="flex items-center justify-center gap-2 text-sm bg-teal-500 text-white font-semibold py-3 px-3 rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed col-span-2 lg:col-span-1"
+            >
+                <VideoCameraIcon className="w-5 h-5"/>
+                {isGeneratingVideo ? 'Gerando...' : 'Gerar Vídeo Curto'}
             </button>
         </div>
 
@@ -146,11 +160,15 @@ export const ResultsCard: React.FC<ResultsCardProps> = ({ output, onReset, onSta
               <XIcon className="w-6 h-6" />
             </button>
             <div className="w-full h-full flex items-center justify-center">
-              <img 
-                src={output.modelImage} 
-                alt="AI Generated Model - Preview" 
-                className="max-w-full max-h-[85vh] object-contain"
-              />
+                {output.modelVideoUrl ? (
+                    <video src={output.modelVideoUrl} className="max-w-full max-h-[85vh] object-contain" controls autoPlay loop playsInline />
+                ) : (
+                    <img 
+                        src={output.modelImage} 
+                        alt="AI Generated Model - Preview" 
+                        className="max-w-full max-h-[85vh] object-contain"
+                    />
+                )}
             </div>
           </div>
         </div>
