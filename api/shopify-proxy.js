@@ -8,16 +8,19 @@ export default async function handler(req, res) {
   
   const origin = req.headers.origin;
   // Permite origens de produção, preview da Vercel e localhost/IP local para testes em tablet.
+  // Caso uma nova origem seja utilizada (ex: novo domínio customizado), ainda liberamos o acesso
+  // para evitar que o frontend fique sem buscar produtos por causa de CORS.
   if (origin && (
-      origin === 'https://ia.luibambini.com.br' || 
-      origin.endsWith('.vercel.app') || 
-      origin.includes('localhost') || 
+      origin === 'https://ia.luibambini.com.br' ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('localhost') ||
       origin.startsWith('http://192.168.')
   )) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-     // Se não houver origin (ex: server-to-server), permite *
-     res.setHeader('Access-Control-Allow-Origin', '*');
+  } else {
+     // Se não houver origin ou se for uma origem nova/não listada, permitimos dinamicamente.
+     // Isso evita bloqueios de CORS quando o app é servido de um domínio diferente do previsto.
+     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -42,8 +45,7 @@ export default async function handler(req, res) {
   }
 
   // Pega o termo de busca da URL (ex: /api/shopify-proxy?search=12345) e remove espaços em branco.
-  const searchQuery = req.query.search?.trim() || '';
-  const shopifyApiUrl = `https://${shopifyShopName}.myshopify.com/admin/api/2024-04/graphql.json`;
+  const searchQuery = req.query.search?.trim() || '';  const shopifyApiUrl = `https://${shopifyShopName}.myshopify.com/admin/api/2024-04/graphql.json`;
 
   // Define a parte da consulta que seleciona os campos do produto, evitando repetição.
   const productFieldsFragment = `
