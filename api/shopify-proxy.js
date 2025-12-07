@@ -4,24 +4,14 @@ import axios from 'axios';
 // Esta é a função principal que a Vercel executará.
 export default async function handler(req, res) {
   // Configura os cabeçalhos CORS para permitir que nosso app frontend chame esta função.
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  
+  // Evitamos usar "*" em conjunto com credenciais para não gerar bloqueios do navegador.
   const origin = req.headers.origin;
-  // Permite origens de produção, preview da Vercel e localhost/IP local para testes em tablet.
-  // Caso uma nova origem seja utilizada (ex: novo domínio customizado), ainda liberamos o acesso
-  // para evitar que o frontend fique sem buscar produtos por causa de CORS.
-  if (origin && (
-      origin === 'https://ia.luibambini.com.br' ||
-      origin.endsWith('.vercel.app') ||
-      origin.includes('localhost') ||
-      origin.startsWith('http://192.168.')
-  )) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-     // Se não houver origin ou se for uma origem nova/não listada, permitimos dinamicamente.
-     // Isso evita bloqueios de CORS quando o app é servido de um domínio diferente do previsto.
-     res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  }
+  const defaultOrigin = process.env.PUBLIC_ORIGIN || 'https://ia.luibambini.com.br';
+  const allowedOrigin = origin || defaultOrigin;
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader(
