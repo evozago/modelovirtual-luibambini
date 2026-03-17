@@ -4,14 +4,21 @@ import axios from 'axios';
 // Esta é a função principal que a Vercel executará.
 export default async function handler(req, res) {
   // Configura os cabeçalhos CORS para permitir que nosso app frontend chame esta função.
-  // Evitamos usar "*" em conjunto com credenciais para não gerar bloqueios do navegador.
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  
   const origin = req.headers.origin;
-  const defaultOrigin = process.env.PUBLIC_ORIGIN || 'https://ia.luibambini.com.br';
-  const allowedOrigin = origin || defaultOrigin;
-
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-  res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Permite origens de produção, preview da Vercel e localhost/IP local para testes em tablet.
+  if (origin && (
+      origin === 'https://ia.luibambini.com.br' || 
+      origin.endsWith('.vercel.app') || 
+      origin.includes('localhost') || 
+      origin.startsWith('http://192.168.')
+  )) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+     // Se não houver origin (ex: server-to-server), permite *
+     res.setHeader('Access-Control-Allow-Origin', '*');
+  }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader(
@@ -35,7 +42,8 @@ export default async function handler(req, res) {
   }
 
   // Pega o termo de busca da URL (ex: /api/shopify-proxy?search=12345) e remove espaços em branco.
-  const searchQuery = req.query.search?.trim() || '';  const shopifyApiUrl = `https://${shopifyShopName}.myshopify.com/admin/api/2024-04/graphql.json`;
+  const searchQuery = req.query.search?.trim() || '';
+  const shopifyApiUrl = `https://${shopifyShopName}.myshopify.com/admin/api/2024-04/graphql.json`;
 
   // Define a parte da consulta que seleciona os campos do produto, evitando repetição.
   const productFieldsFragment = `
