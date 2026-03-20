@@ -47,15 +47,15 @@ app.set('trust proxy', 1);
 // Middleware de CORS Global para desenvolvimento local
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-    }
+    const defaultOrigin = process.env.PUBLIC_ORIGIN || 'http://localhost:5173';
+    const allowedOrigin = origin || defaultOrigin;
+
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization,x-goog-api-key');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    
+
     // Passar direto se for OPTIONS (preflight)
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
